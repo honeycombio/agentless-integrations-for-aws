@@ -5,9 +5,12 @@ Parameters:
     Type: String
     Default: ''
     Description: Name of environment, if applicable
-  HoneycombWriteKey: 
+  HoneycombWriteKeyName: 
     Type: String
-    Description: Your honeycomb write key
+    Description: Name of SSM Parameter containing your Honeycomb write key
+  KMSKeyId:
+    Type: String
+    Description: Id of KMS key used to encrypt the Honeycomb Write Key in SSM
   HoneycombAPIHost: 
     Type: String
     Default: https://api.honeycomb.io
@@ -49,7 +52,7 @@ Resources:
           ENVIRONMENT: !Ref Environment
           PARSER_TYPE: regex
           REGEX_PATTERN: !Ref RegexPattern
-          HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
+          HONEYCOMB_WRITE_KEY_NAME: !Ref HoneycombWriteKeyName
           API_HOST: !Ref HoneycombAPIHost
           DATASET: !Ref HoneycombDataset
           SAMPLE_RATE: !Ref HoneycombSampleRate
@@ -113,3 +116,21 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource: 'arn:aws:logs:*:*:*'
+          - Effect: Allow
+            Action:
+              - ssm:GetParameter
+            Resource: 
+              "Fn::Join":
+                - ''
+                -
+                  - "arn:aws:ssm:*:*:parameter/"
+                  - !Ref HoneycombWriteKeyName
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+            Resource:
+              "Fn::Join":
+                - ''
+                -
+                  - arn:aws:kms:*:*:key/
+                  - !Ref KMSKeyId

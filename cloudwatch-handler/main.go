@@ -8,6 +8,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/honeytail/parsers/regex"
 	"github.com/honeycombio/libhoney-go"
@@ -21,10 +24,6 @@ type Response struct {
 
 var parser parsers.LineParser
 
-//(?P<version>\d+) (?P<account_id>\d+) (?P<interface_id>eni-[0-9a-f]+) (?P<src_addr>[\d\.]+) (?P<dst_addr>[\d\.]+) (?P<src_port>\d+) (?P<dst_port>\d+) (?P<protocol>\d+) (?P<packets>\d+) (?P<bytes>\d+) (?P<start_time>\d+) (?P<end_time>\d+) (?P<action>[A-Z]+) (?P<log_status>[A-Z]+)
-// Handler is your Lambda function handler
-// It uses Amazon API Gateway request/responses provided by the aws-lambda-go/events package,
-// However you could use other event sources (S3, Kinesis etc), or JSON-decoded primitive types such as 'string'.
 func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 	env := os.Getenv("ENVIRONMENT")
 
@@ -90,9 +89,27 @@ func main() {
 	parserType := os.Getenv("PARSER_TYPE")
 	parser = constructParser(parserType)
 
-	writeKey := os.Getenv("HONEYCOMB_WRITE_KEY")
-	if writeKey == "" {
-		log.Printf("Warning: no write key set")
+	// fetch the write key from the provided SSM key name
+	var writeKey string
+	writeKeyName := os.Getenv("HONEYCOMB_WRITE_KEY_NAME")
+	if writeKeyName == "" {
+		log.Printf("Warning: no write key name provided")
+	} else {
+		ssmSession := session.Must(session.NewSession(&aws.Config{
+			Region: aws.String(os.Getenv("AWS_REGION")),
+		}))
+
+		config := &aws.Config{}
+		svc := ssm.New(ssmSession, config)
+		resp, err := svc.GetParameter(&ssm.GetParameterInput{
+			Name:           &writeKeyName,
+			WithDecryption: aws.Bool(true),
+		})
+
+		if err != nil {
+			log.Printf("Error: unable to get honeycomb write key from SSM: %s", err.Error())
+		}
+		writeKey = *resp.Parameter.Value
 	}
 
 	apiHost := os.Getenv("API_HOST")
