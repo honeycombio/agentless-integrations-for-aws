@@ -1,11 +1,5 @@
 #!/bin/bash
-# Very simple build script that only needs the AWSCLI to deploy.
-
-# This is the role that the function will run under. It should
-# already exist
-ROLE=arn:aws:iam::702835727665:role/lambda_basic_execution
-NAME=honeycomb-cloudwatch-integration
-REGION=us-east-1
+# packages handlers and ships them to S3 for use in templates
 
 ROOT_DIR=$(pwd)
 rm -rf pkg
@@ -15,7 +9,7 @@ for HANDLER in "cloudwatch-handler"; do
 	cd ${HANDLER}
 	GOOS=linux go build
 	cd ${ROOT_DIR}
-	cp ${HANDLER}/${HANDLER} pkg
+	mv ${HANDLER}/${HANDLER} pkg
 done;
 
 cd ./pkg
