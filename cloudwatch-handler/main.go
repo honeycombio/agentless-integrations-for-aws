@@ -7,12 +7,16 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/honeycombio/honeytail/parsers/keyval"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/honeycombio/honeytail/httime"
 	"github.com/honeycombio/honeytail/parsers"
+	"github.com/honeycombio/honeytail/parsers/htjson"
 	"github.com/honeycombio/honeytail/parsers/regex"
 	"github.com/honeycombio/libhoney-go"
 )
@@ -24,10 +28,9 @@ type Response struct {
 }
 
 var parser parsers.LineParser
+var parserType, timeFieldName, timeFieldFormat, env string
 
 func Handler(request events.CloudwatchLogsEvent) (Response, error) {
-	env := os.Getenv("ENVIRONMENT")
-
 	if parser == nil {
 		return Response{
 			Ok:      false,
@@ -43,14 +46,37 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 		}, err
 	}
 	for _, event := range data.LogEvents {
-		parsedData, err := parser.ParseLine(event.Message)
+		parsedLine, err := parser.ParseLine(event.Message)
 		if err != nil {
 			log.Printf("error parsing line: %s - line was `%s`", err, event.Message)
 			continue
 		}
-
 		hnyEvent := libhoney.NewEvent()
-		hnyEvent.Add(parsedData)
+
+		timestamp := httime.GetTimestamp(parsedLine, timeFieldName, timeFieldFormat)
+		hnyEvent.Timestamp = timestamp
+
+		// convert ints and floats if necessary
+		if parserType != "json" {
+			data := make(map[string]interface{})
+			for k, v := range parsedLine {
+				if stringVal, ok := v.(string); ok {
+					if val, err := strconv.Atoi(stringVal); err == nil {
+						data[k] = val
+					} else if val, err := strconv.ParseFloat(stringVal, 64); err == nil {
+						data[k] = val
+					} else {
+						data[k] = stringVal
+					}
+				} else {
+					data[k] = v
+				}
+			}
+			hnyEvent.Add(data)
+		} else {
+			hnyEvent.Add(parsedLine)
+		}
+
 		hnyEvent.AddField("env", env)
 		hnyEvent.Send()
 	}
@@ -71,7 +97,9 @@ func constructParser(parserType string) parsers.LineParser {
 		}
 		return regexParser
 	} else if parserType == "json" {
-		return nil
+		return &htjson.JSONLineParser{}
+	} else if parserType == "keyval" {
+		return &keyval.KeyValLineParser{}
 	}
 	return nil
 }
@@ -87,7 +115,7 @@ func main() {
 		sampleRate = uint(i)
 	}
 
-	parserType := os.Getenv("PARSER_TYPE")
+	parserType = os.Getenv("PARSER_TYPE")
 	parser = constructParser(parserType)
 
 	// attempt to decrypt the write key provided
@@ -125,6 +153,10 @@ func main() {
 	if dataset == "" {
 		dataset = "honeycomb-cloudwatch-logs"
 	}
+
+	env = os.Getenv("ENVIRONMENT")
+	timeFieldName = os.Getenv("TIME_FIELD_NAME")
+	timeFieldFormat = os.Getenv("TIME_FIELD_FORMAT")
 
 	// Call Init to configure libhoney
 	libhoney.Init(libhoney.Config{

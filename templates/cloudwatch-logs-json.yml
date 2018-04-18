@@ -30,9 +30,6 @@ Parameters:
     Type: String
     Default: ''
     Description: The filtering expressions that restrict which cloudwatch log lines get sent
-  RegexPattern:
-    Type: String
-    Description: Regex pattern used to match lines
   TimeFieldName:
     Type: String
     Default: ''
@@ -62,8 +59,7 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
-          PARSER_TYPE: regex
-          REGEX_PATTERN: !Ref RegexPattern
+          PARSER_TYPE: json
           HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
           API_HOST: !Ref HoneycombAPIHost
           DATASET: !Ref HoneycombDataset
