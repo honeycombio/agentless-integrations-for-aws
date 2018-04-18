@@ -1,25 +1,25 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This template builds the necessary lambda infra to send cloudwatch logs to honeycomb
-Parameters: 
-  Environment: 
+Parameters:
+  Environment:
     Type: String
     Default: ''
     Description: Name of environment, if applicable
-  HoneycombWriteKeyName: 
+  HoneycombWriteKey:
     Type: String
-    Description: Name of SSM Parameter containing your Honeycomb write key
+    Description: KMS-encrypted blob of your honeycomb write key
   KMSKeyId:
     Type: String
     Description: Id of KMS key used to encrypt the Honeycomb Write Key in SSM
-  HoneycombAPIHost: 
+  HoneycombAPIHost:
     Type: String
     Default: https://api.honeycomb.io
     Description: Optionally set an alternative API host
-  HoneycombDataset: 
+  HoneycombDataset:
     Type: String
     Default: honeycomb-cloudwatch-logs
     Description: Target honeycomb dataset
-  HoneycombSampleRate: 
+  HoneycombSampleRate:
     Type: Number
     Default: 1
     Description: Sample rate
@@ -52,11 +52,11 @@ Resources:
           ENVIRONMENT: !Ref Environment
           PARSER_TYPE: regex
           REGEX_PATTERN: !Ref RegexPattern
-          HONEYCOMB_WRITE_KEY_NAME: !Ref HoneycombWriteKeyName
+          HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
           API_HOST: !Ref HoneycombAPIHost
           DATASET: !Ref HoneycombDataset
           SAMPLE_RATE: !Ref HoneycombSampleRate
-      FunctionName: 
+      FunctionName:
         "Fn::Join":
           - '-'
           -
@@ -72,7 +72,7 @@ Resources:
       Timeout: 10
   ExecutePermission:
     Type: "AWS::Lambda::Permission"
-    Properties: 
+    Properties:
       Action: 'lambda:InvokeFunction'
       FunctionName:
         "Fn::GetAtt":
@@ -94,20 +94,20 @@ Resources:
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
-        Statement: 
+        Statement:
           - Effect: "Allow"
-            Principal: 
-              Service: 
+            Principal:
+              Service:
                 - "lambda.amazonaws.com"
-            Action: 
+            Action:
               - "sts:AssumeRole"
-  LambdaRolePolicies: 
+  LambdaRolePolicies:
     Type: "AWS::IAM::Policy"
-    Properties: 
+    Properties:
       PolicyName: "foo"
-      Roles: 
+      Roles:
           - Ref: LambdaIAMRole
-      PolicyDocument: 
+      PolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
@@ -116,15 +116,6 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource: 'arn:aws:logs:*:*:*'
-          - Effect: Allow
-            Action:
-              - ssm:GetParameter
-            Resource: 
-              "Fn::Join":
-                - ''
-                -
-                  - "arn:aws:ssm:*:*:parameter/"
-                  - !Ref HoneycombWriteKeyName
           - Effect: Allow
             Action:
               - kms:Decrypt

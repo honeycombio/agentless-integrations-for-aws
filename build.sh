@@ -1,6 +1,8 @@
 #!/bin/bash
 # packages handlers and ships them to S3 for use in templates
 
+set -e
+
 ROOT_DIR=$(pwd)
 rm -rf pkg
 mkdir pkg

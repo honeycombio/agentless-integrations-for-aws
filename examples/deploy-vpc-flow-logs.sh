@@ -6,9 +6,11 @@ ENVIRONMENT=production
 STACK_NAME=${ENVIRONMENT}-vpc-flow-logs
 # change this to the log group name used by your VPC flow logs
 LOG_GROUP_NAME=/aws/vpc/${ENVIRONMENT}-flow-logs
-# this is the encrypted SSM Parameter Store value used to store your write key
-HONEYCOMB_WRITE_KEY_NAME=CHANGEME
-# this is the KMS Key ID used to encrypt the SSM Parameter Store value above
+# this is the base64-encoded KMS encrypted CiphertextBlob containing your write key
+# To encrypt your key, run `aws kms encrypt --key-id $MY_KMS_KEY_ID --plaintext "$MY_HONEYCOMB_KEY"`
+# paste the CyphertextBlob here
+HONEYCOMB_WRITE_KEY=CHANGEME
+# this is the KMS Key ID used to encrypt the write key above
 # try running `aws kms list-keys` - you want the UID after ":key/" in the ARN
 KMS_KEY_ID=CHANGEME
 DATASET="vpc-flow-logs"
@@ -28,8 +30,8 @@ JSON=$(cat << END
             "ParameterValue": "${ENVIRONMENT}"
         },
         {
-            "ParameterKey": "HoneycombWriteKeyName",
-            "ParameterValue": "${HONEYCOMB_WRITE_KEY_NAME}"
+            "ParameterKey": "HoneycombWriteKey",
+            "ParameterValue": "${HONEYCOMB_WRITE_KEY}"
         },
         {
             "ParameterKey": "KMSKeyId",

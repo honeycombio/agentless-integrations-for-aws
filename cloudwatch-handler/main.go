@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -10,7 +11,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/honeytail/parsers/regex"
 	"github.com/honeycombio/libhoney-go"
@@ -89,27 +90,30 @@ func main() {
 	parserType := os.Getenv("PARSER_TYPE")
 	parser = constructParser(parserType)
 
-	// fetch the write key from the provided SSM key name
+	// attempt to decrypt the write key provided
 	var writeKey string
-	writeKeyName := os.Getenv("HONEYCOMB_WRITE_KEY_NAME")
-	if writeKeyName == "" {
-		log.Printf("Warning: no write key name provided")
+	encryptedWriteKey := os.Getenv("HONEYCOMB_WRITE_KEY")
+	if encryptedWriteKey == "" {
+		log.Printf("Warning: no write key provided")
 	} else {
-		ssmSession := session.Must(session.NewSession(&aws.Config{
+		kmsSession := session.Must(session.NewSession(&aws.Config{
 			Region: aws.String(os.Getenv("AWS_REGION")),
 		}))
 
 		config := &aws.Config{}
-		svc := ssm.New(ssmSession, config)
-		resp, err := svc.GetParameter(&ssm.GetParameterInput{
-			Name:           &writeKeyName,
-			WithDecryption: aws.Bool(true),
+		svc := kms.New(kmsSession, config)
+		cyphertext, err := base64.StdEncoding.DecodeString(encryptedWriteKey)
+		if err != nil {
+			log.Printf("error decoding ciphertext in write key: %s", err.Error())
+		}
+		resp, err := svc.Decrypt(&kms.DecryptInput{
+			CiphertextBlob: cyphertext,
 		})
 
 		if err != nil {
-			log.Printf("Error: unable to get honeycomb write key from SSM: %s", err.Error())
+			log.Printf("Error: unable to decrypt honeycomb write key: %s", err.Error())
 		}
-		writeKey = *resp.Parameter.Value
+		writeKey = string(resp.Plaintext)
 	}
 
 	apiHost := os.Getenv("API_HOST")
