@@ -81,6 +81,8 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 		hnyEvent.Send()
 	}
 
+	libhoney.Flush()
+
 	return Response{
 		Ok:      true,
 		Message: "ok",
