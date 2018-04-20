@@ -17,7 +17,7 @@ Parameters:
     Description: Optionally set an alternative API host
   HoneycombDataset:
     Type: String
-    Default: honeycomb-cloudwatch-logs
+    Default: cloudwatch-logs
     Description: Target honeycomb dataset
   HoneycombSampleRate:
     Type: Number
@@ -55,9 +55,10 @@ Resources:
           "Fn::Join":
             - ''
             -
-              - honeycombio/serverless-ingest-poc/ingest-handlers-
+              - honeycombio/serverless-agent/
               - !Ref HandlerVersion
-              - .zip
+              - /ingest-handlers.zip
+
       Description: Lambda function for sending cloudwatch logs to Honeycomb
       Environment:
         Variables:

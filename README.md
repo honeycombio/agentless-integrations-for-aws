@@ -46,9 +46,11 @@ $ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext "thi
 
 Record the `CiphertextBlob` and the Key ID - this is what you'll pass to the Cloudformation templates.
 
-### Generic JSON agent
+### Generic JSON agent for Cloudwatch
 
-The generic JSON agent is installed using the Cloudformation template located at `templates/cloudwatch-logs-json.yml`. You will need one Cloudformation stack per Cloudwatch Log Group. The agent is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
+#### Using the Cloudformation UI (the easiest way)
+
+[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-cloudwatch-agent&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/serverless-agent/LATEST/templates/cloudwatch-logs-json.yml) to launch the AWS Cloudformation Console to create the Serverless Agent stack. You will need one stack per Cloudwatch Log Group. The agent is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
 
 - Stack Name
 - Cloudwatch Log Group Name
@@ -60,9 +62,9 @@ Optional inputs include:
 - Target honeycomb dataset
 - Sample rate
 
-You can supply these inputs in the [AWS Cloudformation Console](https://console.aws.amazon.com/cloudformation/). Choose __Create Stack__ and follow the prompts, providing the inputs as needed.
+#### Using the AWS CLI
 
-To get started more quickly, use the [AWS CLI](https://aws.amazon.com/cli/) and the script below. You'll also find this script under `examples/deploy-generic-json.sh`. You'll need to update values for `STACK_NAME`, `LOG_GROUP_NAME`, `HONEYCOMB_WRITE_KEY`, `KMS_KEY_ID`.
+If you need to turn up several stacks, or just don't like the Cloudformation UI, use the [AWS CLI](https://aws.amazon.com/cli/) and the script below. You'll also find this script under `examples/deploy-generic-json.sh`. You'll need to update values for `STACK_NAME`, `LOG_GROUP_NAME`, `HONEYCOMB_WRITE_KEY`, `KMS_KEY_ID`.
 
 ```bash
 #!/bin/bash
