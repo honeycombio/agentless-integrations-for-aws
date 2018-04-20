@@ -9,43 +9,6 @@ This is a BETA - there may still be some bugs, and behavior may change in the fu
 
 ## Installation
 
-### Encrypting your Write Key
-
-When creating an agent, you must supply your honeycomb write key via Cloudformation parameter. Cloudformation parameters are not encrypted, and are plainly viewable to anyone with access to your Cloudformation stacks. For this reason, we require that your Honeycomb write key be encrypted. To encrypt your key, use AWS's KMS service.
-
-First, you'll need to create a KMS key if you don't have one already. The default account keys are not suitable for this use case.
-
-```
-$ aws kms create-key --description "used to encrypt secrets"
-{
-    "KeyMetadata": {
-        "AWSAccountId": "123455678910",
-        "KeyId": "a38f80cc-19b5-486a-a163-a4502b7a52cc",
-        "Arn": "arn:aws:kms:us-east-1:123455678910:key/a38f80cc-19b5-486a-a163-a4502b7a52cc",
-        "CreationDate": 1524160520.097,
-        "Enabled": true,
-        "Description": "used to encrypt honeycomb secrets",
-        "KeyUsage": "ENCRYPT_DECRYPT",
-        "KeyState": "Enabled",
-        "Origin": "AWS_KMS",
-        "KeyManager": "CUSTOMER"
-    }
-}
-$ aws kms create-alias --alias-name alias/secrets_key --target-key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc
-```
-
-Now you're ready to encrypt your Honeycomb write key:
-
-```
-$ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext "thisismyhoneycombkey"
-{
-    "CiphertextBlob": "AQICAHge4+BhZ1sURk1UGUjTZxmcegPXyRqG8NCK8/schk381gGToGRb8n3PCjITQPDKjxuJAAAAcjBwBgkqhkiG9w0BBwagYzBhAgEAMFwGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM0GLK36ChLOlHQiiiAgEQgC9lYlR3qvsQEhgILHhT0eD4atgdB7UAMW6TIAJw9vYsPpnbHhqhO7V8/mEa9Iej+g==",
-    "KeyId": "arn:aws:kms:us-east-1:702835727665:key/a38f80cc-19b5-486a-a163-a4502b7a52cc"
-}
-```
-
-Record the `CiphertextBlob` and the Key ID - this is what you'll pass to the Cloudformation templates.
-
 ### Generic JSON agent for Cloudwatch
 
 #### Using the Cloudformation UI (the easiest way)
@@ -54,13 +17,13 @@ Record the `CiphertextBlob` and the Key ID - this is what you'll pass to the Clo
 
 - Stack Name
 - Cloudwatch Log Group Name
-- Your encrypted honeycomb write key (see encryption steps above).
-- The ID of the AWS Key Management Service key used to encrypt your write key
+- Your honeycomb write key (optionally encrypted)
 
 Optional inputs include:
 
 - Target honeycomb dataset
 - Sample rate
+- The ID of the AWS Key Management Service key used to encrypt your write key. If your write key is not encrypted, do not set a value here
 
 #### Using the AWS CLI
 
@@ -155,3 +118,40 @@ The Cloudformation templates create the following resources:
 - An IAM role and policy used by the Lambda function. This role grants the Lambda function the ability to write to Cloudwatch (for its own logging) and to decrypt your write key using the provided KMS key.
 - A Lambda Permission granting Cloudwatch the ability to invoke this function
 - A Cloudwatch Subscription Filter, which invokes this function when new Cloudwatch log events are received
+
+## Encrypting your Write Key
+
+When creating an agent, you must supply your honeycomb write key via Cloudformation parameter. Cloudformation parameters are not encrypted, and are plainly viewable to anyone with access to your Cloudformation stacks. For this reason, we strongly recommend that your Honeycomb write key be encrypted. To encrypt your key, use AWS's KMS service.
+
+First, you'll need to create a KMS key if you don't have one already. The default account keys are not suitable for this use case.
+
+```
+$ aws kms create-key --description "used to encrypt secrets"
+{
+    "KeyMetadata": {
+        "AWSAccountId": "123455678910",
+        "KeyId": "a38f80cc-19b5-486a-a163-a4502b7a52cc",
+        "Arn": "arn:aws:kms:us-east-1:123455678910:key/a38f80cc-19b5-486a-a163-a4502b7a52cc",
+        "CreationDate": 1524160520.097,
+        "Enabled": true,
+        "Description": "used to encrypt honeycomb secrets",
+        "KeyUsage": "ENCRYPT_DECRYPT",
+        "KeyState": "Enabled",
+        "Origin": "AWS_KMS",
+        "KeyManager": "CUSTOMER"
+    }
+}
+$ aws kms create-alias --alias-name alias/secrets_key --target-key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc
+```
+
+Now you're ready to encrypt your Honeycomb write key:
+
+```
+$ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext "thisismyhoneycombkey"
+{
+    "CiphertextBlob": "AQICAHge4+BhZ1sURk1UGUjTZxmcegPXyRqG8NCK8/schk381gGToGRb8n3PCjITQPDKjxuJAAAAcjBwBgkqhkiG9w0BBwagYzBhAgEAMFwGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM0GLK36ChLOlHQiiiAgEQgC9lYlR3qvsQEhgILHhT0eD4atgdB7UAMW6TIAJw9vYsPpnbHhqhO7V8/mEa9Iej+g==",
+    "KeyId": "arn:aws:kms:us-east-1:702835727665:key/a38f80cc-19b5-486a-a163-a4502b7a52cc"
+}
+```
+
+Record the `CiphertextBlob` and the Key ID - this is what you'll pass to the Cloudformation templates.

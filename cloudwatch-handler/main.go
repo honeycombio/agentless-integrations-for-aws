@@ -120,30 +120,38 @@ func main() {
 	parserType = os.Getenv("PARSER_TYPE")
 	parser = constructParser(parserType)
 
-	// attempt to decrypt the write key provided
 	var writeKey string
-	encryptedWriteKey := os.Getenv("HONEYCOMB_WRITE_KEY")
-	if encryptedWriteKey == "" {
-		log.Printf("Warning: no write key provided")
+	// If KMS_KEY_ID is supplied, we assume we're dealing with an encrypted key.
+	kmsKeyId := os.Getenv("KMS_KEY_ID")
+	if kmsKeyId != "" {
+		encryptedWriteKey := os.Getenv("HONEYCOMB_WRITE_KEY")
+		if encryptedWriteKey == "" {
+			log.Printf("Warning: no write key provided")
+		} else {
+			kmsSession := session.Must(session.NewSession(&aws.Config{
+				Region: aws.String(os.Getenv("AWS_REGION")),
+			}))
+
+			config := &aws.Config{}
+			svc := kms.New(kmsSession, config)
+			cyphertext, err := base64.StdEncoding.DecodeString(encryptedWriteKey)
+			if err != nil {
+				log.Printf("error decoding ciphertext in write key: %s", err.Error())
+			}
+			resp, err := svc.Decrypt(&kms.DecryptInput{
+				CiphertextBlob: cyphertext,
+			})
+
+			if err != nil {
+				log.Printf("Error: unable to decrypt honeycomb write key: %s", err.Error())
+			}
+			writeKey = string(resp.Plaintext)
+		}
 	} else {
-		kmsSession := session.Must(session.NewSession(&aws.Config{
-			Region: aws.String(os.Getenv("AWS_REGION")),
-		}))
-
-		config := &aws.Config{}
-		svc := kms.New(kmsSession, config)
-		cyphertext, err := base64.StdEncoding.DecodeString(encryptedWriteKey)
-		if err != nil {
-			log.Printf("error decoding ciphertext in write key: %s", err.Error())
+		writeKey = os.Getenv("HONEYCOMB_WRITE_KEY")
+		if writeKey == "" {
+			log.Printf("Warning: no write key provided")
 		}
-		resp, err := svc.Decrypt(&kms.DecryptInput{
-			CiphertextBlob: cyphertext,
-		})
-
-		if err != nil {
-			log.Printf("Error: unable to decrypt honeycomb write key: %s", err.Error())
-		}
-		writeKey = string(resp.Plaintext)
 	}
 
 	apiHost := os.Getenv("API_HOST")

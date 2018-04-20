@@ -4,17 +4,18 @@ Parameters:
   Environment:
     Type: String
     Default: ''
-    Description: Name of environment, if applicable
+    Description: Optional. Name of environment. This will be included in log events sent to Honeycomb.
   HoneycombWriteKey:
     Type: String
-    Description: KMS-encrypted blob of your honeycomb write key
+    Description: Your Honeycomb write key. If KMSKeyId is set, this should be a Cyphertext Blob from KMS.
   KMSKeyId:
     Type: String
-    Description: Id of KMS key used to encrypt the Honeycomb Write Key in SSM
+    Default: ''
+    Description: Optional. ID of the KMS Key used to encrypt your Honeycomb write key.
   HoneycombAPIHost:
     Type: String
     Default: https://api.honeycomb.io
-    Description: Optionally set an alternative API host
+    Description: Optional. Altenative Honeycomb API host.
   HoneycombDataset:
     Type: String
     Default: cloudwatch-logs
@@ -22,26 +23,28 @@ Parameters:
   HoneycombSampleRate:
     Type: Number
     Default: 1
-    Description: Sample rate
+    Description: Sample rate. See https://honeycomb.io/docs/guides/sampling/.
   LogGroupName:
     Type: String
-    Description: The name of the AWS cloudwatch log group you want to subscribe to
+    Description: Required. The name of the AWS Cloudwatch Log Group to which the agent will be subscribed.
   FilterPattern:
     Type: String
     Default: ''
-    Description: The filtering expressions that restrict which cloudwatch log lines get sent
+    Description: Optional. The filtering expressions that restrict which cloudwatch log lines get sent
   TimeFieldName:
     Type: String
     Default: ''
-    Description: Name of the field that contains a timestamp
+    Description: Optional. Name of the field that contains a timestamp
   TimeFieldFormat:
     Type: String
     Default: ''
-    Description: Timestamp format to use (strftime and Golang time.Parse supported)
+    Description: Optional. Timestamp format to use, if TimeFieldName is set. (strftime and Golang time.Parse supported)
   HandlerVersion:
     Type: String
     Default: 'LATEST'
-    Description: Optional desired version of the cloudwatch handler to use.
+    Description: Optional. Desired version of the cloudwatch handler to use.
+Conditions:
+  EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
 Resources:
   CloudwatchLambdaHandler:
     Type: "AWS::Lambda::Function"
@@ -61,6 +64,7 @@ Resources:
           ENVIRONMENT: !Ref Environment
           PARSER_TYPE: json
           HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
+          KMS_KEY_ID: !Ref KMSKeyId
           API_HOST: !Ref HoneycombAPIHost
           DATASET: !Ref HoneycombDataset
           SAMPLE_RATE: !Ref HoneycombSampleRate
@@ -111,10 +115,10 @@ Resources:
                 - "lambda.amazonaws.com"
             Action:
               - "sts:AssumeRole"
-  LambdaRolePolicies:
+  LambdaLogPolicy:
     Type: "AWS::IAM::Policy"
     Properties:
-      PolicyName: "foo"
+      PolicyName: "lambda-create-log"
       Roles:
           - Ref: LambdaIAMRole
       PolicyDocument:
@@ -126,6 +130,16 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource: 'arn:aws:logs:*:*:*'
+  LambdaKMSPolicy:
+    Type: "AWS::IAM::Policy"
+    Condition: EncryptionEnabled
+    Properties:
+      PolicyName: "lambda-kms-decrypt"
+      Roles:
+          - Ref: LambdaIAMRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
           - Effect: Allow
             Action:
               - kms:Decrypt
