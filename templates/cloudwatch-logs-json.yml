@@ -4,14 +4,14 @@ Parameters:
   Environment:
     Type: String
     Default: ''
-    Description: Optional. Name of environment. This will be included in log events sent to Honeycomb.
+    Description: Name of environment. This will be included in log events sent to Honeycomb.
   HoneycombWriteKey:
     Type: String
     Description: Your Honeycomb write key. If KMSKeyId is set, this should be a Cyphertext Blob from KMS.
   KMSKeyId:
     Type: String
     Default: ''
-    Description: Optional. ID of the KMS Key used to encrypt your Honeycomb write key.
+    Description: ID of the KMS Key used to encrypt your Honeycomb write key.
   HoneycombAPIHost:
     Type: String
     Default: https://api.honeycomb.io
@@ -26,23 +26,43 @@ Parameters:
     Description: Sample rate. See https://honeycomb.io/docs/guides/sampling/.
   LogGroupName:
     Type: String
-    Description: Required. The name of the AWS Cloudwatch Log Group to which the agent will be subscribed.
+    Description: The name of the AWS Cloudwatch Log Group to which the agent will be subscribed.
   FilterPattern:
     Type: String
     Default: ''
-    Description: Optional. The filtering expressions that restrict which cloudwatch log lines get sent
+    Description: The filtering expressions that restrict which cloudwatch log lines get sent
   TimeFieldName:
     Type: String
     Default: ''
-    Description: Optional. Name of the field that contains a timestamp
+    Description: Name of the field that contains a timestamp
   TimeFieldFormat:
     Type: String
     Default: ''
-    Description: Optional. Timestamp format to use, if TimeFieldName is set. (strftime and Golang time.Parse supported)
+    Description: Timestamp format to use, if TimeFieldName is set. (strftime and Golang time.Parse supported)
   HandlerVersion:
     Type: String
     Default: 'LATEST'
-    Description: Optional. Desired version of the cloudwatch handler to use.
+    Description: Desired version of the cloudwatch handler to use.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Required Parameters
+        Parameters:
+          - LogGroupName
+          - HoneycombWriteKey
+          - HoneycombDataset
+          - HoneycombSampleRate
+      - Label:
+          default: Optional Parameters
+        Parameters:
+          - Environment
+          - KMSKeyId
+          - FilterPattern
+          - TimeFieldName
+          - TimeFieldFormat
+          - HandlerVersion
+          - HoneycombAPIHost
 Conditions:
   EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
 Resources:
