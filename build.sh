@@ -5,13 +5,15 @@ set -e
 
 # TODO: update version to incorporate Travis build number
 # for now, bump this when necessary
-VERSION=0.0.1
+VERSION=0.0.2
 
 ROOT_DIR=$(pwd)
 rm -rf pkg
 mkdir pkg
 
-for HANDLER in "cloudwatch-handler"; do
+HANDLERS="cloudwatch-handler s3-handler"
+
+for HANDLER in ${HANDLERS}; do
 	cd ${HANDLER}
 	GOOS=linux go build
 	cd ${ROOT_DIR}
@@ -22,12 +24,12 @@ cd ./pkg
 
 zip ingest-handlers.zip *
 
-aws s3 cp ingest-handlers.zip s3://honeycomb-builds/honeycombio/serverless-agent/LATEST/ingest-handlers.zip
+# aws s3 cp ingest-handlers.zip s3://honeycomb-builds/honeycombio/serverless-agent/LATEST/ingest-handlers.zip
 aws s3 cp ingest-handlers.zip s3://honeycomb-builds/honeycombio/serverless-agent/${VERSION}/ingest-handlers.zip
 
 cd ${ROOT_DIR}
 
 for TEMPLATE in templates/*; do
-	aws s3 cp ${TEMPLATE} s3://honeycomb-builds/honeycombio/serverless-agent/LATEST/${TEMPLATE}
+	# aws s3 cp ${TEMPLATE} s3://honeycomb-builds/honeycombio/serverless-agent/LATEST/${TEMPLATE}
 	aws s3 cp ${TEMPLATE} s3://honeycomb-builds/honeycombio/serverless-agent/${VERSION}/${TEMPLATE}
 done
