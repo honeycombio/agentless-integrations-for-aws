@@ -1,23 +1,16 @@
 package main
 
 import (
-	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
-	"github.com/honeycombio/honeytail/parsers/keyval"
+	"github.com/honeycombio/serverless-ingest-poc/common"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/honeycombio/honeytail/httime"
 	"github.com/honeycombio/honeytail/parsers"
-	"github.com/honeycombio/honeytail/parsers/htjson"
-	"github.com/honeycombio/honeytail/parsers/regex"
 	"github.com/honeycombio/libhoney-go"
 )
 
@@ -58,21 +51,7 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 
 		// convert ints and floats if necessary
 		if parserType != "json" {
-			data := make(map[string]interface{})
-			for k, v := range parsedLine {
-				if stringVal, ok := v.(string); ok {
-					if val, err := strconv.Atoi(stringVal); err == nil {
-						data[k] = val
-					} else if val, err := strconv.ParseFloat(stringVal, 64); err == nil {
-						data[k] = val
-					} else {
-						data[k] = stringVal
-					}
-				} else {
-					data[k] = v
-				}
-			}
-			hnyEvent.Add(data)
+			hnyEvent.Add(common.ConvertTypes(parsedLine))
 		} else {
 			hnyEvent.Add(parsedLine)
 		}
@@ -89,92 +68,24 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 	}, nil
 }
 
-func constructParser(parserType string) parsers.LineParser {
-	if parserType == "regex" {
-		regexVal := os.Getenv("REGEX_PATTERN")
-		regexParser, err := regex.NewRegexLineParser([]string{regexVal})
-		if err != nil {
-			log.Printf("Error: failed to construct regex parser")
-			return nil
-		}
-		return regexParser
-	} else if parserType == "json" {
-		return &htjson.JSONLineParser{}
-	} else if parserType == "keyval" {
-		return &keyval.KeyValLineParser{}
-	}
-	return nil
-}
-
 func main() {
-	var sampleRate uint = 1
-	if os.Getenv("SAMPLE_RATE") != "" {
-		i, err := strconv.Atoi(os.Getenv("SAMPLE_RATE"))
-		if err != nil {
-			log.Printf("Warning: unable to parse sample rate %s, falling back to 1.",
-				os.Getenv("SAMPLE_RATE"))
-		}
-		sampleRate = uint(i)
+	var err error
+	if err = common.InitHoneycombFromEnvVars(); err != nil {
+		log.Fatalf("Unable to initialize libhoney with the supplied environment variables")
+		return
 	}
+	defer libhoney.Close()
 
 	parserType = os.Getenv("PARSER_TYPE")
-	parser = constructParser(parserType)
-
-	var writeKey string
-	// If KMS_KEY_ID is supplied, we assume we're dealing with an encrypted key.
-	kmsKeyId := os.Getenv("KMS_KEY_ID")
-	if kmsKeyId != "" {
-		encryptedWriteKey := os.Getenv("HONEYCOMB_WRITE_KEY")
-		if encryptedWriteKey == "" {
-			log.Printf("Warning: no write key provided")
-		} else {
-			kmsSession := session.Must(session.NewSession(&aws.Config{
-				Region: aws.String(os.Getenv("AWS_REGION")),
-			}))
-
-			config := &aws.Config{}
-			svc := kms.New(kmsSession, config)
-			cyphertext, err := base64.StdEncoding.DecodeString(encryptedWriteKey)
-			if err != nil {
-				log.Printf("error decoding ciphertext in write key: %s", err.Error())
-			}
-			resp, err := svc.Decrypt(&kms.DecryptInput{
-				CiphertextBlob: cyphertext,
-			})
-
-			if err != nil {
-				log.Printf("Error: unable to decrypt honeycomb write key: %s", err.Error())
-			}
-			writeKey = string(resp.Plaintext)
-		}
-	} else {
-		writeKey = os.Getenv("HONEYCOMB_WRITE_KEY")
-		if writeKey == "" {
-			log.Printf("Warning: no write key provided")
-		}
-	}
-
-	apiHost := os.Getenv("API_HOST")
-	if apiHost == "" {
-		apiHost = "https://api.honeycomb.io"
-	}
-
-	dataset := os.Getenv("DATASET")
-	if dataset == "" {
-		dataset = "honeycomb-cloudwatch-logs"
+	parser, err = common.ConstructParser(parserType)
+	if err != nil {
+		log.Fatalf("Unable to construct '%s' parser: %s", parserType, err)
+		return
 	}
 
 	env = os.Getenv("ENVIRONMENT")
 	timeFieldName = os.Getenv("TIME_FIELD_NAME")
 	timeFieldFormat = os.Getenv("TIME_FIELD_FORMAT")
 
-	// Call Init to configure libhoney
-	libhoney.Init(libhoney.Config{
-		WriteKey:   writeKey,
-		Dataset:    dataset,
-		APIHost:    apiHost,
-		SampleRate: sampleRate,
-	})
-	defer libhoney.Close()
 	lambda.Start(Handler)
 }
