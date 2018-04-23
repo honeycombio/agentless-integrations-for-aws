@@ -69,9 +69,14 @@ func Handler(request events.S3Event) (Response, error) {
 				continue
 			}
 		}
+		linesRead := 0
 		scanner := bufio.NewScanner(reader)
 		ok := scanner.Scan()
 		for ok {
+			linesRead++
+			if linesRead%10000 == 0 {
+				log.Printf("have processed %d lines of %s", linesRead, record.S3.Object.Key)
+			}
 			parsedLine, err := parser.ParseLine(scanner.Text())
 			if err != nil {
 				log.Printf("error parsing line: %s - line was: %s", err, scanner.Text())
