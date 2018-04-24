@@ -164,9 +164,7 @@ When an object is uploaded to your bucket, an S3 event object is passed to the l
 
 Lambda's execution time is capped at 5 minutes. If you upload sufficiently large logs (in the 100s of megabytes or more), the function may not process all events before Lambda times out. It's best to submit your logs in smaller chunks - Lambda can scale to process more logs better than it can scale to process larger logs.
 
-Increasing the MemorySize of the Lambda also increases its CPU allocation. If you are unable to break up your logs into smaller objects,and you find that the logs aren't being processed in the allowed 5 minutes, increasing MemorySize can lead to faster processing of events.
-
-Processing 
+Increasing the MemorySize of the Lambda also increases its CPU allocation. If you are unable to break up your logs into smaller objects, and you find that the logs aren't being processed in the allowed 5 minutes, increasing MemorySize can lead to faster processing of events.
 
 ## Encrypting your Write Key
 
