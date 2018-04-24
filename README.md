@@ -6,6 +6,7 @@ This is a BETA - there may still be some bugs, and behavior may change in the fu
 
 - Generic JSON agent for Cloudwatch Logs
 - VPC Flow Log agent for Cloudwatch Logs
+- Generic JSON agent for S3 Logs
 
 ## Installation
 
@@ -18,10 +19,10 @@ This is a BETA - there may still be some bugs, and behavior may change in the fu
 - Stack Name
 - Cloudwatch Log Group Name
 - Your honeycomb write key (optionally encrypted)
+- Target honeycomb dataset
 
 Optional inputs include:
 
-- Target honeycomb dataset
 - Sample rate
 - The ID of the AWS Key Management Service key used to encrypt your write key. If your write key is not encrypted, do not set a value here
 
@@ -108,16 +109,64 @@ If successful, you should see an output like this:
 }
 ```
 
+### Generic JSON agent for S3
+
+[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-s3-agent&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/serverless-agent/LATEST/templates/s3-logs-json.yml) to launch the AWS Cloudformation Console to create the Serverless Agent stack. You will need one stack per S3 bucket that you want to subscribe to. The agent is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
+
+- Stack Name
+- Cloudwatch Log Group Name
+- Your honeycomb write key (optionally encrypted)
+- Target honeycomb dataset
+
+Optional inputs include:
+
+- Sample rate
+- The ID of the AWS Key Management Service key used to encrypt your write key. If your write key is not encrypted, do not set a value here
+
+#### Sending S3 events to Lambda
+
+After your stack is created, you will need to manually configure your bucket to send PutObject and Upload events to Lambda.
+
+From the AWS console, select the bucket that you want to subscribe to and select __Properties__:
+
+![alt text](docs/s3_step1.png)
+
+Find __Advanced Settings__ and click __Events__:
+
+![alt text](docs/s3_step2.png)
+
+Enable events __Put__ and __Complete Multipart Upload__ and select the lambda belonging to the honeycomb s3 agent. If you have multiple agents, remember to select the agent belonging to the stack that has permissions to access your bucket. You can optionally set a prefix and suffix, if you only want a subset of objects to be processed by your lambda. This is recommended if the bucket has multiple uses.
+
+![alt text](docs/s3_step3.png)
+
 ## How it works
 
 ### Cloudwatch
 
-The Cloudformation templates create the following resources:
+The Cloudformation template creates the following resources:
 
 - An AWS Lambda Function
-- An IAM role and policy used by the Lambda function. This role grants the Lambda function the ability to write to Cloudwatch (for its own logging) and to decrypt your write key using the provided KMS key.
+- An IAM role and policy used by the Lambda function. This role grants the Lambda function the ability to write to Cloudwatch (for its own logging) and to decrypt your write key using the provided KMS key (if applicable)
 - A Lambda Permission granting Cloudwatch the ability to invoke this function
 - A Cloudwatch Subscription Filter, which invokes this function when new Cloudwatch log events are received
+
+### S3
+
+The Cloudformation template creates the following resources:
+
+- An AWS Lambda Function
+- An IAM role and policy used by the Lambda function. This role grants the Lambda function the ability to write to Cloudwatch (for its own logging), retrieve objects from the specified bucket, and decrypt your write key using the provided KMS key (if applicable).
+- A Lambda Permission granting S3 the ability to invoke this function
+
+When an object is uploaded to your bucket, an S3 event object is passed to the lambda function. The lambda function invokes `S3:GetObject` on the object, retrieves its contents, and parses them line by line.
+
+#### CAVEATS
+
+Lambda's execution time is capped at 5 minutes. If you upload sufficiently large logs (in the 100s of megabytes or more), the function may not process all events before Lambda times out. It's best to submit your logs in smaller chunks - Lambda can scale to process more logs better than it can scale to process larger logs.
+
+Increasing the MemorySize of the Lambda also increases its CPU allocation. If you are unable to break up your logs into smaller objects,and you find that the logs aren't being processed in the allowed 5 minutes, increasing MemorySize can lead to faster processing of events.
+
+Processing 
 
 ## Encrypting your Write Key
 
