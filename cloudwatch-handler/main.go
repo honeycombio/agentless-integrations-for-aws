@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/honeycombio/serverless-ingest-poc/common"
+	"github.com/sirupsen/logrus"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -41,7 +41,8 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 	for _, event := range data.LogEvents {
 		parsedLine, err := parser.ParseLine(event.Message)
 		if err != nil {
-			log.Printf("error parsing line: %s - line was `%s`", err, event.Message)
+			logrus.WithError(err).WithField("line", event.Message).
+				Warn("unable to parse line")
 			continue
 		}
 		hnyEvent := libhoney.NewEvent()
@@ -71,7 +72,8 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 func main() {
 	var err error
 	if err = common.InitHoneycombFromEnvVars(); err != nil {
-		log.Fatalf("Unable to initialize libhoney with the supplied environment variables")
+		logrus.WithError(err).
+			Fatal("Unable to initialize libhoney with the supplied environment variables")
 		return
 	}
 	defer libhoney.Close()
@@ -79,7 +81,8 @@ func main() {
 	parserType = os.Getenv("PARSER_TYPE")
 	parser, err = common.ConstructParser(parserType)
 	if err != nil {
-		log.Fatalf("Unable to construct '%s' parser: %s", parserType, err)
+		logrus.WithError(err).WithField("parser_type", parserType).
+			Fatal("unable to construct parser")
 		return
 	}
 

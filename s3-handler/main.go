@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
-	"log"
 	"os"
 	"strings"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/honeycombio/serverless-ingest-poc/common"
+	"github.com/sirupsen/logrus"
 )
 
 // Response is a simple structured response
@@ -41,10 +41,10 @@ func Handler(request events.S3Event) (Response, error) {
 			Key:    &record.S3.Object.Key,
 		})
 		if err != nil {
-			log.Printf("unable to get object %s from bucket %s",
-				record.S3.Object.Key,
-				record.S3.Bucket.Name,
-			)
+			logrus.WithFields(logrus.Fields{
+				"key":    record.S3.Object.Key,
+				"bucket": record.S3.Bucket.Name,
+			}).Warn("unable to get object from bucket")
 			continue
 		}
 
@@ -54,18 +54,16 @@ func Handler(request events.S3Event) (Response, error) {
 			if *resp.ContentType == "application/x-gzip" {
 				reader, err = gzip.NewReader(resp.Body)
 				if err != nil {
-					log.Printf("unable to create gzip reader for %s: %s",
-						record.S3.Object.Key,
-						err)
+					logrus.WithError(err).WithField("key", record.S3.Object.Key).
+						Warn("unable to create gzip reader for object")
 					continue
 				}
 			}
 		} else if strings.HasSuffix(record.S3.Object.Key, ".gz") {
 			reader, err = gzip.NewReader(resp.Body)
 			if err != nil {
-				log.Printf("unable to create gzip reader for %s: %s",
-					record.S3.Object.Key,
-					err)
+				logrus.WithError(err).WithField("key", record.S3.Object.Key).
+					Warn("unable to create gzip reader for object")
 				continue
 			}
 		}
@@ -75,11 +73,15 @@ func Handler(request events.S3Event) (Response, error) {
 		for ok {
 			linesRead++
 			if linesRead%10000 == 0 {
-				log.Printf("have processed %d lines of %s", linesRead, record.S3.Object.Key)
+				logrus.WithFields(logrus.Fields{
+					"lines_read": linesRead,
+					"key":        record.S3.Object.Key,
+				}).Info("parser checkpoint")
 			}
 			parsedLine, err := parser.ParseLine(scanner.Text())
 			if err != nil {
-				log.Printf("error parsing line: %s - line was: %s", err, scanner.Text())
+				logrus.WithError(err).WithField("line", scanner.Text()).
+					Warn("failed to parse line")
 				continue
 			}
 			hnyEvent := libhoney.NewEvent()
@@ -100,10 +102,8 @@ func Handler(request events.S3Event) (Response, error) {
 		}
 
 		if scanner.Err() != nil {
-			log.Printf("s3 read of %s ended early due to err: %s",
-				record.S3.Object.Key,
-				err,
-			)
+			logrus.WithError(scanner.Err()).WithField("key", record.S3.Object.Key).
+				Error("s3 read of object ended early due to error")
 		}
 	}
 
@@ -118,7 +118,8 @@ func Handler(request events.S3Event) (Response, error) {
 func main() {
 	var err error
 	if err = common.InitHoneycombFromEnvVars(); err != nil {
-		log.Fatalf("Unable to initialize libhoney with the supplied environment variables")
+		logrus.WithError(err).
+			Fatal("Unable to initialize libhoney with the supplied environment variables")
 		return
 	}
 	defer libhoney.Close()
@@ -126,7 +127,8 @@ func main() {
 	parserType = os.Getenv("PARSER_TYPE")
 	parser, err = common.ConstructParser(parserType)
 	if err != nil {
-		log.Fatalf("Unable to construct '%s' parser: %s", parserType, err)
+		logrus.WithError(err).WithField("parser_type", parserType).
+			Fatal("unable to construct parser")
 		return
 	}
 

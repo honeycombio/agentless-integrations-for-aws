@@ -3,7 +3,6 @@ package common
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/honeycombio/honeytail/parsers/keyval"
 	"github.com/honeycombio/honeytail/parsers/regex"
 	libhoney "github.com/honeycombio/libhoney-go"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -33,8 +33,8 @@ func InitHoneycombFromEnvVars() error {
 	if os.Getenv("SAMPLE_RATE") != "" {
 		i, err := strconv.Atoi(os.Getenv("SAMPLE_RATE"))
 		if err != nil {
-			log.Printf("Warning: unable to parse sample rate %s, falling back to 1.",
-				os.Getenv("SAMPLE_RATE"))
+			logrus.WithField("sample_rate", os.Getenv("SAMPLE_RATE")).
+				Warn("Warning: unable to parse sample rate %s, falling back to 1.")
 		}
 		sampleRate = uint(i)
 	}
@@ -44,7 +44,6 @@ func InitHoneycombFromEnvVars() error {
 	if kmsKeyID != "" {
 		encryptedWriteKey := os.Getenv("HONEYCOMB_WRITE_KEY")
 		if encryptedWriteKey == "" {
-			log.Printf("Warning: no write key provided")
 			return fmt.Errorf("Value for KMS_KEY_ID but no value for HONEYCOMB_WRITE_KEY")
 		} else {
 			kmsSession := session.Must(session.NewSession(&aws.Config{
@@ -55,25 +54,24 @@ func InitHoneycombFromEnvVars() error {
 			svc := kms.New(kmsSession, config)
 			cyphertext, err := base64.StdEncoding.DecodeString(encryptedWriteKey)
 			if err != nil {
-				log.Printf("error decoding ciphertext in write key: %s", err.Error())
-				return fmt.Errorf("Unable to decode ciphertext in write key. " +
-					"Is the supplied ciphertext base64-encoded?")
+				logrus.WithError(err).
+					Error("unable to decode ciphertext in write key")
+				return fmt.Errorf("unable to decode ciphertext in write key")
 			}
 			resp, err := svc.Decrypt(&kms.DecryptInput{
 				CiphertextBlob: cyphertext,
 			})
 
 			if err != nil {
-				log.Printf("Error: unable to decrypt honeycomb write key: %s", err.Error())
-				return fmt.Errorf("Unable to decrypt honeycomb write key")
+				logrus.WithError(err).Error("unable to decrypt honeycomb write key")
+				return fmt.Errorf("unable to decrypt honeycomb write key")
 			}
 			writeKey = string(resp.Plaintext)
 		}
 	} else {
 		writeKey = os.Getenv("HONEYCOMB_WRITE_KEY")
 		if writeKey == "" {
-			log.Printf("Warning: no write key provided")
-			return fmt.Errorf("No value for HONEYCOMB_WRITE_KEY")
+			return fmt.Errorf("no value for HONEYCOMB_WRITE_KEY")
 		}
 	}
 
