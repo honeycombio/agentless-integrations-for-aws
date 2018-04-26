@@ -24,6 +24,10 @@ var (
 	dataset    string
 )
 
+const (
+	version = "1.0.0"
+)
+
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
 // passed to the lambda through env vars. The caller is responsible for calling
 // libhoney.Close afterward. Will return an err if insufficient ENV vars were
@@ -84,6 +88,8 @@ func InitHoneycombFromEnvVars() error {
 	if dataset == "" {
 		dataset = "honeycomb-cloudwatch-logs"
 	}
+
+	libhoney.UserAgentAddition = fmt.Sprintf("integrations-for-aws/%s", version)
 
 	// Call Init to configure libhoney
 	libhoney.Init(libhoney.Config{

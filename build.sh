@@ -3,9 +3,7 @@
 
 set -e
 
-# TODO: update version to incorporate Travis build number
-# for now, bump this when necessary
-VERSION=0.0.2
+VERSION=1.0.0
 DEPLOY_ROOT=s3://honeycomb-builds/honeycombio/integrations-for-aws
 
 ROOT_DIR=$(pwd)
