@@ -75,7 +75,7 @@ Resources:
           "Fn::Join":
             - ''
             -
-              - honeycombio/serverless-agent/
+              - honeycombio/integrations-for-aws
               - !Ref HandlerVersion
               - /ingest-handlers.zip
       Description: Lambda function for sending s3 logs to Honeycomb

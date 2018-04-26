@@ -1,20 +1,20 @@
-# Honeycomb Serverless Agent
+# Honeycomb Agentless Integrations for AWS
 
 This is a BETA - there may still be some bugs, and behavior may change in the future. We're also working to refine the installation process to get you going even faster!
 
 ## Current Features
 
-- Generic JSON agent for Cloudwatch Logs
-- VPC Flow Log agent for Cloudwatch Logs
-- Generic JSON agent for S3 Logs
+- Generic JSON integration for Cloudwatch Logs
+- VPC Flow Log integration for Cloudwatch Logs
+- Generic JSON integration for S3 Logs
 
 ## Installation
 
-### Generic JSON agent for Cloudwatch
+### Generic JSON integration for Cloudwatch
 
 #### Using the Cloudformation UI (the easiest way)
 
-[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-cloudwatch-agent&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/serverless-agent/LATEST/templates/cloudwatch-logs-json.yml) to launch the AWS Cloudformation Console to create the Serverless Agent stack. You will need one stack per Cloudwatch Log Group. The agent is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
+[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-cloudwatch-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-logs-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per Cloudwatch Log Group. The integration is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
 
 - Stack Name
 - Cloudwatch Log Group Name
@@ -109,9 +109,9 @@ If successful, you should see an output like this:
 }
 ```
 
-### Generic JSON agent for S3
+### Generic JSON integration for S3
 
-[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-s3-agent&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/serverless-agent/LATEST/templates/s3-logs-json.yml) to launch the AWS Cloudformation Console to create the Serverless Agent stack. You will need one stack per S3 bucket that you want to subscribe to. The agent is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
+[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-s3-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/s3-logs-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per S3 bucket that you want to subscribe to. The integration is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
 
 - Stack Name
 - Cloudwatch Log Group Name
@@ -135,7 +135,7 @@ Find __Advanced Settings__ and click __Events__:
 
 ![alt text](docs/s3_step2.png)
 
-Enable events __Put__ and __Complete Multipart Upload__ and select the lambda belonging to the honeycomb s3 agent. If you have multiple agents, remember to select the agent belonging to the stack that has permissions to access your bucket. You can optionally set a prefix and suffix, if you only want a subset of objects to be processed by your lambda. This is recommended if the bucket has multiple uses.
+Enable events __Put__ and __Complete Multipart Upload__ and select the lambda belonging to the honeycomb s3 integration. If you have multiple integrations, remember to select the integration belonging to the stack that has permissions to access your bucket. You can optionally set a prefix and suffix, if you only want a subset of objects to be processed by your lambda. This is recommended if the bucket has multiple uses.
 
 ![alt text](docs/s3_step3.png)
 
@@ -168,7 +168,7 @@ Increasing the MemorySize of the Lambda also increases its CPU allocation. If yo
 
 ## Encrypting your Write Key
 
-When creating an agent, you must supply your honeycomb write key via Cloudformation parameter. Cloudformation parameters are not encrypted, and are plainly viewable to anyone with access to your Cloudformation stacks. For this reason, we strongly recommend that your Honeycomb write key be encrypted. To encrypt your key, use AWS's KMS service.
+When installing the integration, you must supply your honeycomb write key via Cloudformation parameter. Cloudformation parameters are not encrypted, and are plainly viewable to anyone with access to your Cloudformation stacks. For this reason, we strongly recommend that your Honeycomb write key be encrypted. To encrypt your key, use AWS's KMS service.
 
 First, you'll need to create a KMS key if you don't have one already. The default account keys are not suitable for this use case.
 

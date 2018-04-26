@@ -29,7 +29,7 @@ Parameters:
     Description: Regex pattern used to match lines.
   LogGroupName:
     Type: String
-    Description: The name of the AWS Cloudwatch Log Group to which the agent will be subscribed.
+    Description: The name of the AWS Cloudwatch Log Group to subscribe to
   FilterPattern:
     Type: String
     Default: ''
@@ -79,7 +79,7 @@ Resources:
           "Fn::Join":
             - ''
             -
-              - honeycombio/serverless-agent/
+              - honeycombio/integrations-for-aws/
               - !Ref HandlerVersion
               - /ingest-handlers.zip
       Description: Lambda function for sending cloudwatch logs to Honeycomb
