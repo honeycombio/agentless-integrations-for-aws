@@ -1,0 +1,177 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template builds the necessary lambda infra to send vpc flow logs to honeycomb
+Parameters:
+  Environment:
+    Type: String
+    Default: ''
+    Description: Name of environment. This will be included in log events sent to Honeycomb.
+  HoneycombWriteKey:
+    Type: String
+    Description: Your Honeycomb write key. If KMSKeyId is set, this should be a Cyphertext Blob from KMS.
+  KMSKeyId:
+    Type: String
+    Default: ''
+    Description: ID of the KMS Key used to encrypt your Honeycomb write key.
+  HoneycombAPIHost:
+    Type: String
+    Default: https://api.honeycomb.io
+    Description: Altenative Honeycomb API host.
+  HoneycombDataset:
+    Type: String
+    Default: vpc-flow-logs
+    Description: Target honeycomb dataset
+  HoneycombSampleRate:
+    Type: Number
+    Default: 1
+    Description: Sample rate - vpc flow logs generate a lot of data. Sampling is highly recommended.
+  RegexPattern:
+    Type: String
+    Description: Regex pattern used to match lines.
+    Default: '(?P<version>\d+) (?P<account_id>\d+) (?P<interface_id>eni-[0-9a-f]+) (?P<src_addr>[\d\.]+) (?P<dst_addr>[\d\.]+) (?P<src_port>\d+) (?P<dst_port>\d+) (?P<protocol>\d+) (?P<packets>\d+) (?P<bytes>\d+) (?P<start_time>\d+) (?P<end_time>\d+) (?P<action>[A-Z]+) (?P<log_status>[A-Z]+)'
+  LogGroupName:
+    Type: String
+    Description: The name of the AWS Cloudwatch Log Group to subscribe to
+  FilterPattern:
+    Type: String
+    Default: ''
+    Description: The filtering expressions that restrict which cloudwatch log lines get sent
+  TimeFieldName:
+    Type: String
+    Default: 'start_time'
+    Description: Name of the field that contains a timestamp
+  TimeFieldFormat:
+    Type: String
+    Default: '%s(%L)?'
+    Description: Timestamp format to use, if TimeFieldName is set. (strftime and Golang time.Parse supported)
+  HandlerVersion:
+    Type: String
+    Default: 'LATEST'
+    Description: Desired version of the cloudwatch handler to use.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Required Parameters
+        Parameters:
+          - LogGroupName
+          - RegexPattern
+          - HoneycombWriteKey
+          - HoneycombDataset
+          - HoneycombSampleRate
+      - Label:
+          default: Optional Parameters
+        Parameters:
+          - Environment
+          - KMSKeyId
+          - FilterPattern
+          - TimeFieldName
+          - TimeFieldFormat
+          - HandlerVersion
+          - HoneycombAPIHost
+Conditions:
+  EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
+Resources:
+  CloudwatchLambdaHandler:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        S3Bucket: honeycomb-builds
+        S3Key:
+          "Fn::Join":
+            - ''
+            -
+              - honeycombio/integrations-for-aws/
+              - !Ref HandlerVersion
+              - /ingest-handlers.zip
+      Description: Lambda function for sending cloudwatch logs to Honeycomb
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          PARSER_TYPE: regex
+          REGEX_PATTERN: !Ref RegexPattern
+          HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
+          KMS_KEY_ID: !Ref KMSKeyId
+          API_HOST: !Ref HoneycombAPIHost
+          DATASET: !Ref HoneycombDataset
+          SAMPLE_RATE: !Ref HoneycombSampleRate
+          TIME_FIELD_NAME: !Ref TimeFieldName
+          TIME_FIELD_FORMAT: !Ref TimeFieldFormat
+      FunctionName:
+        "Fn::Join":
+          - '-'
+          -
+            - CloudwatchLambdaHandler
+            - !Ref "AWS::StackName"
+      Handler: cloudwatch-handler
+      MemorySize: 128
+      Role:
+        "Fn::GetAtt":
+          - LambdaIAMRole
+          - Arn
+      Runtime: go1.x
+      Timeout: 10
+  ExecutePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName:
+        "Fn::GetAtt":
+          - CloudwatchLambdaHandler
+          - Arn
+      Principal: 'logs.amazonaws.com'
+  CloudwatchSubscriptionFilter:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Properties:
+      DestinationArn:
+        "Fn::GetAtt":
+          - CloudwatchLambdaHandler
+          - Arn
+      LogGroupName: !Ref LogGroupName
+      FilterPattern: !Ref FilterPattern
+    DependsOn: ExecutePermission
+  LambdaIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+  LambdaLogPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "lambda-create-log"
+      Roles:
+          - Ref: LambdaIAMRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: 'arn:aws:logs:*:*:*'
+  LambdaKMSPolicy:
+    Type: "AWS::IAM::Policy"
+    Condition: EncryptionEnabled
+    Properties:
+      PolicyName: "lambda-kms-decrypt"
+      Roles:
+          - Ref: LambdaIAMRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+            Resource:
+              "Fn::Join":
+                - ''
+                -
+                  - arn:aws:kms:*:*:key/
+                  - !Ref KMSKeyId
