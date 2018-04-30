@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/honeycombio/serverless-ingest-poc/common"
+	"github.com/honeycombio/agentless-integrations-for-aws/common"
 	"github.com/sirupsen/logrus"
 
 	"github.com/aws/aws-lambda-go/events"

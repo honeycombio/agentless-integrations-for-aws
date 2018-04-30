@@ -11,10 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/honeycombio/agentless-integrations-for-aws/common"
 	"github.com/honeycombio/honeytail/httime"
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
-	"github.com/honeycombio/serverless-ingest-poc/common"
 	"github.com/sirupsen/logrus"
 )
 
