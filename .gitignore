@@ -1,3 +1,4 @@
 pkg
 cloudwatch-handler/cloudwatch-handler
 s3-handler/s3-handler
+sns-handler/sns-handler

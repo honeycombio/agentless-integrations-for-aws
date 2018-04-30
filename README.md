@@ -144,6 +144,10 @@ Enable events __Put__ and __Complete Multipart Upload__ and select the lambda be
 
 ![alt text](docs/s3_step3.png)
 
+### Generic JSON integration for SNS
+
+[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-sns-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/sns-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per SNS topic that you want to subscribe to.
+
 ### Other integrations
 
 #### VPC Flow Log Integration
