@@ -17,8 +17,6 @@ This is a BETA - there may still be some bugs, and behavior may change in the fu
 
 ### Generic JSON integration for Cloudwatch
 
-#### Using the Cloudformation UI (the easiest way)
-
 [Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-cloudwatch-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-logs-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per Cloudwatch Log Group. The integration is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
 
 - Stack Name
@@ -30,89 +28,6 @@ Optional inputs include:
 
 - Sample rate
 - The ID of the AWS Key Management Service key used to encrypt your write key. If your write key is not encrypted, do not set a value here
-
-#### Using the AWS CLI
-
-If you need to turn up several stacks, or just don't like the Cloudformation UI, use the [AWS CLI](https://aws.amazon.com/cli/) and the script below. You'll also find this script under `examples/deploy-generic-json.sh`. You'll need to update values for `STACK_NAME`, `LOG_GROUP_NAME`, `HONEYCOMB_WRITE_KEY`, `KMS_KEY_ID`.
-
-```bash
-#!/bin/bash
-ENVIRONMENT=production
-STACK_NAME=CHANGEME
-# change this to the log group name used by your application
-LOG_GROUP_NAME=/change/me
-# this is the base64-encoded KMS encrypted CiphertextBlob containing your write key
-# To encrypt your key, run `aws kms encrypt --key-id $MY_KMS_KEY_ID --plaintext "$MY_HONEYCOMB_KEY"`
-# paste the CyphertextBlob here
-HONEYCOMB_WRITE_KEY=changeme
-# this is the KMS Key ID used to encrypt the write key above
-# try running `aws kms list-keys` - you want the UID after ":key/" in the ARN
-KMS_KEY_ID=changeme
-DATASET="cloudwatch-logs"
-HONEYCOMB_SAMPLE_RATE="1"
-TEMPLATE="file://./templates/cloudwatch-logs-json.yml"
-
-JSON=$(cat << END
-{
-    "StackName": "${STACK_NAME}",
-    "Parameters": [
-        {
-            "ParameterKey": "Environment",
-            "ParameterValue": "${ENVIRONMENT}"
-        },
-        {
-            "ParameterKey": "HoneycombWriteKey",
-            "ParameterValue": "${HONEYCOMB_WRITE_KEY}"
-        },
-        {
-            "ParameterKey": "KMSKeyId",
-            "ParameterValue": "${KMS_KEY_ID}"
-        },
-        {
-            "ParameterKey": "HoneycombDataset",
-            "ParameterValue": "${DATASET}"
-        },
-        {
-            "ParameterKey": "HoneycombSampleRate",
-            "ParameterValue": "${HONEYCOMB_SAMPLE_RATE}"
-        },
-        {
-            "ParameterKey": "LogGroupName",
-            "ParameterValue": "${LOG_GROUP_NAME}"
-        },
-        {
-            "ParameterKey": "TimeFieldName",
-            "ParameterValue": ""
-        },
-        {
-            "ParameterKey": "TimeFieldFormat",
-            "ParameterValue": ""
-        }
-    ],
-    "Capabilities": [
-        "CAPABILITY_IAM"
-    ],
-    "OnFailure": "ROLLBACK",
-    "Tags": [
-        {
-            "Key": "Environment",
-            "Value": "${ENVIRONMENT}"
-        }
-    ]
-}
-END
-)
-
-aws cloudformation create-stack --cli-input-json "${JSON}" --template-body=${TEMPLATE}
-```
-
-If successful, you should see an output like this:
-
-```json
-{
-    "StackId": "arn:aws:cloudformation:us-east-1:12345678910:stack/my-stack-name/19b46840-4348-11e8-9090-500c28b4e461"
-}
-```
 
 ### Generic JSON integration for S3
 
@@ -241,3 +156,88 @@ $ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext "thi
 ```
 
 Record the `CiphertextBlob` and the Key ID - this is what you'll pass to the Cloudformation templates.
+
+## Advanced Installation Steps
+
+### Building the stack with the AWS CLI
+
+If you need to turn up several stacks, or just don't like the Cloudformation UI, use the [AWS CLI](https://aws.amazon.com/cli/) and the script below. You'll also find this script under `examples/deploy-generic-json.sh`. You'll need to update values for `STACK_NAME`, `LOG_GROUP_NAME`, `HONEYCOMB_WRITE_KEY`, `KMS_KEY_ID`.
+
+```bash
+#!/bin/bash
+ENVIRONMENT=production
+STACK_NAME=CHANGEME
+# change this to the log group name used by your application
+LOG_GROUP_NAME=/change/me
+# this is the base64-encoded KMS encrypted CiphertextBlob containing your write key
+# To encrypt your key, run `aws kms encrypt --key-id $MY_KMS_KEY_ID --plaintext "$MY_HONEYCOMB_KEY"`
+# paste the CyphertextBlob here
+HONEYCOMB_WRITE_KEY=changeme
+# this is the KMS Key ID used to encrypt the write key above
+# try running `aws kms list-keys` - you want the UID after ":key/" in the ARN
+KMS_KEY_ID=changeme
+DATASET="cloudwatch-logs"
+HONEYCOMB_SAMPLE_RATE="1"
+TEMPLATE="file://./templates/cloudwatch-logs-json.yml"
+
+JSON=$(cat << END
+{
+    "StackName": "${STACK_NAME}",
+    "Parameters": [
+        {
+            "ParameterKey": "Environment",
+            "ParameterValue": "${ENVIRONMENT}"
+        },
+        {
+            "ParameterKey": "HoneycombWriteKey",
+            "ParameterValue": "${HONEYCOMB_WRITE_KEY}"
+        },
+        {
+            "ParameterKey": "KMSKeyId",
+            "ParameterValue": "${KMS_KEY_ID}"
+        },
+        {
+            "ParameterKey": "HoneycombDataset",
+            "ParameterValue": "${DATASET}"
+        },
+        {
+            "ParameterKey": "HoneycombSampleRate",
+            "ParameterValue": "${HONEYCOMB_SAMPLE_RATE}"
+        },
+        {
+            "ParameterKey": "LogGroupName",
+            "ParameterValue": "${LOG_GROUP_NAME}"
+        },
+        {
+            "ParameterKey": "TimeFieldName",
+            "ParameterValue": ""
+        },
+        {
+            "ParameterKey": "TimeFieldFormat",
+            "ParameterValue": ""
+        }
+    ],
+    "Capabilities": [
+        "CAPABILITY_IAM"
+    ],
+    "OnFailure": "ROLLBACK",
+    "Tags": [
+        {
+            "Key": "Environment",
+            "Value": "${ENVIRONMENT}"
+        }
+    ]
+}
+END
+)
+
+aws cloudformation create-stack --cli-input-json "${JSON}" --template-body=${TEMPLATE}
+```
+
+If successful, you should see an output like this:
+
+```json
+{
+    "StackId": "arn:aws:cloudformation:us-east-1:12345678910:stack/my-stack-name/19b46840-4348-11e8-9090-500c28b4e461"
+}
+```
