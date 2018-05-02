@@ -159,6 +159,10 @@ Record the `CiphertextBlob` and the Key ID - this is what you'll pass to the Clo
 
 ## Advanced Installation Steps
 
+## Terraform
+
+See the `terraform` directory in this repo for examples of Terraform configs.
+
 ### Building the stack with the AWS CLI
 
 If you need to turn up several stacks, or just don't like the Cloudformation UI, use the [AWS CLI](https://aws.amazon.com/cli/) and the script below. You'll also find this script under `examples/deploy-generic-json.sh`. You'll need to update values for `STACK_NAME`, `LOG_GROUP_NAME`, `HONEYCOMB_WRITE_KEY`, `KMS_KEY_ID`.
