@@ -26,6 +26,7 @@ type Response struct {
 
 var parser parsers.LineParser
 var parserType, timeFieldName, timeFieldFormat, env string
+var matchPatterns, filterPatterns []string
 
 func Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -36,6 +37,14 @@ func Handler(request events.S3Event) (Response, error) {
 	svc := s3.New(sess, config)
 
 	for _, record := range request.Records {
+		if filterKey(record.S3.Object.Key, matchPatterns, filterPatterns) {
+			logrus.WithFields(logrus.Fields{
+				"key":             record.S3.Object.Key,
+				"match_patterns":  matchPatterns,
+				"filter_patterns": filterPatterns,
+			}).Info("key doesn't match specified patterns, skipping")
+			continue
+		}
 		resp, err := svc.GetObject(&s3.GetObjectInput{
 			Bucket: &record.S3.Bucket.Name,
 			Key:    &record.S3.Object.Key,
@@ -135,6 +144,15 @@ func main() {
 	env = os.Getenv("ENVIRONMENT")
 	timeFieldName = os.Getenv("TIME_FIELD_NAME")
 	timeFieldFormat = os.Getenv("TIME_FIELD_FORMAT")
+
+	matchPatterns = []string{".*"}
+	filterPatterns = []string{}
+	if os.Getenv("MATCH_PATTERNS") != "" {
+		matchPatterns = strings.Split(os.Getenv("MATCH_PATTERNS"), ",")
+	}
+	if os.Getenv("FILTER_PATTERNS") != "" {
+		filterPatterns = strings.Split(os.Getenv("FILTER_PATTERNS"), ",")
+	}
 
 	lambda.Start(Handler)
 }

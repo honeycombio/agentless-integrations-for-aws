@@ -42,6 +42,7 @@ Optional inputs include:
 
 - Sample rate
 - The ID of the AWS Key Management Service key used to encrypt your write key. If your write key is not encrypted, do not set a value here
+- Match and filter patterns, if you want to selectively process files in the bucket. For example, `production` or a simple regex like `^.+\.log$`
 
 #### Sending S3 events to Lambda
 
@@ -79,7 +80,7 @@ The generic regex integration accepts arbitrary regex ([re2](https://github.com/
 
 #### AWS ELB Integration for S3 Logs
 
-Used to parse ELB logs, which are saved to S3 periodically by the ELB service.
+Used to parse ELB logs, which are saved to S3 periodically by the ELB service. You can use the __MatchPatterns__ and __FilterPatterns__ parameters to selectively target specific ELBs.
 
 [Click here to install the AWS ELB Integration](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-elb-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/aws-elb-logs.yml)
 

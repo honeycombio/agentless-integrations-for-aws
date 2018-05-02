@@ -27,10 +27,14 @@ Parameters:
   S3BucketName:
     Type: String
     Description: The S3 bucket that receives your AWS ELB logs
-  RegexPattern:
+  MatchPatterns:
     Type: String
-    Description: regex for parsing the ELB log
-    Default: '(?P<timestamp>.+) (?P<elb>.+) (?P<client_authority>.+) (?P<backend_authority>.+) (?P<request_processing_time>.+) (?P<backend_processing_time>.+) (?P<response_processing_time>.+) (?P<elb_status_code>.+) (?P<backend_status_code>.+) (?P<received_bytes>.+) (?P<sent_bytes>.+) (?P<request>".+") (?P<user_agent>".+") (?P<ssl_cipher>.+) (?P<ssl_protocol>.+)'
+    Description: Comma-separated simple regexes to specify which s3 keys to match.
+    Default: '.*'
+  FilterPatterns:
+    Type: String
+    Description: Comma-separated simple regexes to specify which s3 keys to exclude.
+    Default: ''
   TimeFieldName:
     Type: String
     Default: 'timestamp'
@@ -60,6 +64,8 @@ Metadata:
       - Label:
           default: Optional Parameters
         Parameters:
+          - MatchPatterns
+          - FilterPatterns
           - LambdaMemorySize
           - Environment
           - KMSKeyId
@@ -67,7 +73,6 @@ Metadata:
           - TimeFieldFormat
           - HandlerVersion
           - HoneycombAPIHost
-          - RegexPattern
 Conditions:
   EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
 Resources:
@@ -88,7 +93,7 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           PARSER_TYPE: regex
-          REGEX_PATTERN: !Ref RegexPattern
+          REGEX_PATTERN: '(?P<timestamp>.+) (?P<elb>.+) (?P<client_authority>.+) (?P<backend_authority>.+) (?P<request_processing_time>.+) (?P<backend_processing_time>.+) (?P<response_processing_time>.+) (?P<elb_status_code>.+) (?P<backend_status_code>.+) (?P<received_bytes>.+) (?P<sent_bytes>.+) (?P<request>".+") (?P<user_agent>".+") (?P<ssl_cipher>.+) (?P<ssl_protocol>.+)'
           HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
           KMS_KEY_ID: !Ref KMSKeyId
           API_HOST: !Ref HoneycombAPIHost
@@ -96,6 +101,8 @@ Resources:
           SAMPLE_RATE: !Ref HoneycombSampleRate
           TIME_FIELD_NAME: !Ref TimeFieldName
           TIME_FIELD_FORMAT: !Ref TimeFieldFormat
+          MATCH_PATTERNS: !Ref MatchPatterns
+          FILTER_PATTERNS: !Ref FilterPatterns
       FunctionName:
         "Fn::Join":
           - '-'
