@@ -27,6 +27,26 @@ Parameters:
   LogGroupName:
     Type: String
     Description: The name of the AWS Cloudwatch Log Group to subscribe to
+  LogGroupName1:
+    Type: String
+    Default: ''
+    Description: Additional log group to subscribe to
+  LogGroupName2:
+    Type: String
+    Default: ''
+    Description: Additional log group to subscribe to
+  LogGroupName3:
+    Type: String
+    Default: ''
+    Description: Additional log group to subscribe to
+  LogGroupName4:
+    Type: String
+    Default: ''
+    Description: Additional log group to subscribe to
+  LogGroupName5:
+    Type: String
+    Default: ''
+    Description: Additional log group to subscribe to
   FilterPattern:
     Type: String
     Default: ''
@@ -56,6 +76,11 @@ Metadata:
       - Label:
           default: Optional Parameters
         Parameters:
+          - LogGroupName1
+          - LogGroupName2
+          - LogGroupName3
+          - LogGroupName4
+          - LogGroupName5
           - Environment
           - KMSKeyId
           - FilterPattern
@@ -65,6 +90,11 @@ Metadata:
           - HoneycombAPIHost
 Conditions:
   EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
+  LogGroup1Enabled: !Not [!Equals [!Ref LogGroupName1, '']]
+  LogGroup2Enabled: !Not [!Equals [!Ref LogGroupName2, '']]
+  LogGroup3Enabled: !Not [!Equals [!Ref LogGroupName3, '']]
+  LogGroup4Enabled: !Not [!Equals [!Ref LogGroupName4, '']]
+  LogGroup5Enabled: !Not [!Equals [!Ref LogGroupName5, '']]
 Resources:
   CloudwatchLambdaHandler:
     Type: "AWS::Lambda::Function"
@@ -121,6 +151,63 @@ Resources:
           - CloudwatchLambdaHandler
           - Arn
       LogGroupName: !Ref LogGroupName
+      FilterPattern: !Ref FilterPattern
+    DependsOn: ExecutePermission
+  # hacky work-around to allow multiple optional inputs for log group name
+  # clearly hitting some limitations of the Cloudformation workflow here
+  CloudwatchSubscriptionFilter1:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Condition: LogGroup1Enabled
+    Properties:
+      DestinationArn:
+        "Fn::GetAtt":
+          - CloudwatchLambdaHandler
+          - Arn
+      LogGroupName: !Ref LogGroupName1
+      FilterPattern: !Ref FilterPattern
+    DependsOn: ExecutePermission
+  CloudwatchSubscriptionFilter2:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Condition: LogGroup2Enabled
+    Properties:
+      DestinationArn:
+        "Fn::GetAtt":
+          - CloudwatchLambdaHandler
+          - Arn
+      LogGroupName: !Ref LogGroupName2
+      FilterPattern: !Ref FilterPattern
+    DependsOn: ExecutePermission
+  CloudwatchSubscriptionFilter3:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Condition: LogGroup3Enabled
+    Properties:
+      DestinationArn:
+        "Fn::GetAtt":
+          - CloudwatchLambdaHandler
+          - Arn
+      LogGroupName: !Ref LogGroupName3
+      FilterPattern: !Ref FilterPattern
+    DependsOn: ExecutePermission
+  CloudwatchSubscriptionFilter4:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Condition: LogGroup4Enabled
+    Properties:
+      DestinationArn:
+        "Fn::GetAtt":
+          - CloudwatchLambdaHandler
+          - Arn
+      LogGroupName: !Ref LogGroupName4
+      FilterPattern: !Ref FilterPattern
+    DependsOn: ExecutePermission
+  CloudwatchSubscriptionFilter5:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Condition: LogGroup5Enabled
+    Properties:
+      DestinationArn:
+        "Fn::GetAtt":
+          - CloudwatchLambdaHandler
+          - Arn
+      LogGroupName: !Ref LogGroupName5
       FilterPattern: !Ref FilterPattern
     DependsOn: ExecutePermission
   LambdaIAMRole:
