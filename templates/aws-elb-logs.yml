@@ -35,14 +35,6 @@ Parameters:
     Type: String
     Description: Comma-separated simple regexes to specify which s3 keys to exclude.
     Default: ''
-  TimeFieldName:
-    Type: String
-    Default: 'timestamp'
-    Description: Name of the field that contains a timestamp
-  TimeFieldFormat:
-    Type: String
-    Default: '2006-01-02T15:04:05.9999Z'
-    Description: Timestamp format to use, if TimeFieldName is set. (strftime and Golang time.Parse supported)
   HandlerVersion:
     Type: String
     Default: 'LATEST'
@@ -69,8 +61,6 @@ Metadata:
           - LambdaMemorySize
           - Environment
           - KMSKeyId
-          - TimeFieldName
-          - TimeFieldFormat
           - HandlerVersion
           - HoneycombAPIHost
 Conditions:
@@ -99,8 +89,8 @@ Resources:
           API_HOST: !Ref HoneycombAPIHost
           DATASET: !Ref HoneycombDataset
           SAMPLE_RATE: !Ref HoneycombSampleRate
-          TIME_FIELD_NAME: !Ref TimeFieldName
-          TIME_FIELD_FORMAT: !Ref TimeFieldFormat
+          TIME_FIELD_NAME: 'timestamp'
+          TIME_FIELD_FORMAT: '2006-01-02T15:04:05.9999Z'
           MATCH_PATTERNS: !Ref MatchPatterns
           FILTER_PATTERNS: !Ref FilterPatterns
       FunctionName:

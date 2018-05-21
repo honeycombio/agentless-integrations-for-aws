@@ -27,18 +27,6 @@ Parameters:
   S3BucketName:
     Type: String
     Description: The S3 bucket that receives your S3 Bucket Logs
-  RegexPattern:
-    Type: String
-    Description: regex for parsing the S3 Bucket Logs
-    Default: '(?P<bucket_owner>.+) (?P<bucket>.+) \[(?P<timestamp>.+)\] (?P<remote_ip>.+) (?P<requester>.+) (?P<request_id>.+) (?P<operation>.+) (?P<key>.+) "(?P<request_uri>.+)" (?P<http_status>.+) (?P<error_code>.+) (?P<bytes_sent>.+) (?P<object_size>.+) (?P<total_time>.+) (?P<turnaround_time>.+) "(?P<referrer>.+)" "(?P<user_agent>.+)" (?P<version_id>.+)'
-  TimeFieldName:
-    Type: String
-    Default: 'timestamp'
-    Description: Name of the field that contains a timestamp
-  TimeFieldFormat:
-    Type: String
-    Default: '%d/%b/%Y:%H:%M:%S %z'
-    Description: Timestamp format to use, if TimeFieldName is set. (strftime and Golang time.Parse supported)
   HandlerVersion:
     Type: String
     Default: 'LATEST'
@@ -63,11 +51,8 @@ Metadata:
           - LambdaMemorySize
           - Environment
           - KMSKeyId
-          - TimeFieldName
-          - TimeFieldFormat
           - HandlerVersion
           - HoneycombAPIHost
-          - RegexPattern
 Conditions:
   EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
 Resources:
@@ -88,14 +73,14 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           PARSER_TYPE: regex
-          REGEX_PATTERN: !Ref RegexPattern
+          REGEX_PATTERN: '(?P<bucket_owner>.+) (?P<bucket>.+) \[(?P<timestamp>.+)\] (?P<remote_ip>.+) (?P<requester>.+) (?P<request_id>.+) (?P<operation>.+) (?P<key>.+) "(?P<request_uri>.+)" (?P<http_status>.+) (?P<error_code>.+) (?P<bytes_sent>.+) (?P<object_size>.+) (?P<total_time>.+) (?P<turnaround_time>.+) "(?P<referrer>.+)" "(?P<user_agent>.+)" (?P<version_id>.+)'
           HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
           KMS_KEY_ID: !Ref KMSKeyId
           API_HOST: !Ref HoneycombAPIHost
           DATASET: !Ref HoneycombDataset
           SAMPLE_RATE: !Ref HoneycombSampleRate
-          TIME_FIELD_NAME: !Ref TimeFieldName
-          TIME_FIELD_FORMAT: !Ref TimeFieldFormat
+          TIME_FIELD_NAME: 'timestamp'
+          TIME_FIELD_FORMAT: '%d/%b/%Y:%H:%M:%S %z'
       FunctionName:
         "Fn::Join":
           - '-'
