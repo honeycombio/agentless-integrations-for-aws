@@ -11,7 +11,7 @@ Parameters:
   KMSKeyId:
     Type: String
     Default: ''
-    Description: ID of the KMS Key used to encrypt your Honeycomb write key.
+    Description: 'KMS Key ID used to encrypt your Honeycomb write key (ex: a80d80aa-19b5-486a-a163-a4502b5555)'
   HoneycombAPIHost:
     Type: String
     Default: https://api.honeycomb.io
@@ -35,10 +35,6 @@ Parameters:
     Type: String
     Description: Comma-separated simple regexes to specify which s3 keys to exclude.
     Default: ''
-  HandlerVersion:
-    Type: String
-    Default: 'LATEST'
-    Description: Desired version of the s3 handler to use.
   LambdaMemorySize:
     Type: Number
     Default: 192
@@ -61,7 +57,6 @@ Metadata:
           - LambdaMemorySize
           - Environment
           - KMSKeyId
-          - HandlerVersion
           - HoneycombAPIHost
 Conditions:
   EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
@@ -71,13 +66,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: honeycomb-builds
-        S3Key:
-          "Fn::Join":
-            - ''
-            -
-              - honeycombio/integrations-for-aws/
-              - !Ref HandlerVersion
-              - /ingest-handlers.zip
+        S3Key: honeycombio/integrations-for-aws/LATEST/ingest-handlers.zip
       Description: Lambda function for sending s3 logs to Honeycomb
       Environment:
         Variables:

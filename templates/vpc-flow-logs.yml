@@ -11,7 +11,7 @@ Parameters:
   KMSKeyId:
     Type: String
     Default: ''
-    Description: ID of the KMS Key used to encrypt your Honeycomb write key.
+    Description: 'KMS Key ID used to encrypt your Honeycomb write key (ex: a80d80aa-19b5-486a-a163-a4502b5555)'
   HoneycombAPIHost:
     Type: String
     Default: https://api.honeycomb.io
@@ -31,10 +31,6 @@ Parameters:
     Type: String
     Default: ''
     Description: The filtering expressions that restrict which cloudwatch log lines get sent
-  HandlerVersion:
-    Type: String
-    Default: 'LATEST'
-    Description: Desired version of the cloudwatch handler to use.
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -51,7 +47,6 @@ Metadata:
           - Environment
           - KMSKeyId
           - FilterPattern
-          - HandlerVersion
           - HoneycombAPIHost
 Conditions:
   EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
@@ -61,13 +56,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: honeycomb-builds
-        S3Key:
-          "Fn::Join":
-            - ''
-            -
-              - honeycombio/integrations-for-aws/
-              - !Ref HandlerVersion
-              - /ingest-handlers.zip
+        S3Key: honeycombio/integrations-for-aws/LATEST/ingest-handlers.zip
       Description: Lambda function for sending cloudwatch logs to Honeycomb
       Environment:
         Variables:

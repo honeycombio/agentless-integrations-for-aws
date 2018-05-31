@@ -156,7 +156,7 @@ $ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext "thi
 }
 ```
 
-Record the `CiphertextBlob` and the Key ID - this is what you'll pass to the Cloudformation templates.
+Record the `CiphertextBlob` and the last part of the Key ID (example: `a38f80cc-19b5-486a-a163-a4502b7a52cc`) - this is what you'll pass to the Cloudformation templates.
 
 ## Advanced Installation Steps
 

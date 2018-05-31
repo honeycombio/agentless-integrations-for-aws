@@ -3,6 +3,8 @@
 
 set -e
 
+./test.sh
+
 VERSION=1.0.0
 DEPLOY_ROOT=s3://honeycomb-builds/honeycombio/integrations-for-aws
 
