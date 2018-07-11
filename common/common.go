@@ -25,7 +25,7 @@ var (
 )
 
 const (
-	version = "1.0.0"
+	version = "1.1.0"
 )
 
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
@@ -138,4 +138,11 @@ func ConvertTypes(input map[string]interface{}) map[string]interface{} {
 	}
 
 	return data
+}
+
+// AddUserAgentMetadata adds additional metadata to the user agent string
+func AddUserAgentMetadata(handler, parser string) {
+	libhoney.UserAgentAddition = fmt.Sprintf(
+		"%s (%s, %s)", libhoney.UserAgentAddition, handler, parser,
+	)
 }
