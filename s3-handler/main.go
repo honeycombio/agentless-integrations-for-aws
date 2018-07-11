@@ -140,6 +140,7 @@ func main() {
 			Fatal("unable to construct parser")
 		return
 	}
+	common.AddUserAgentMetadata("s3", parserType)
 
 	env = os.Getenv("ENVIRONMENT")
 	timeFieldName = os.Getenv("TIME_FIELD_NAME")

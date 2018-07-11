@@ -139,3 +139,10 @@ func ConvertTypes(input map[string]interface{}) map[string]interface{} {
 
 	return data
 }
+
+// AddUserAgentMetadata adds additional metadata to the user agent string
+func AddUserAgentMetadata(handler, parser string) {
+	libhoney.UserAgentAddition = fmt.Sprintf(
+		"%s (%s, %s)", libhoney.UserAgentAddition, handler, parser,
+	)
+}
