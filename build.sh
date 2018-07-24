@@ -5,14 +5,14 @@ set -e
 
 ./test.sh
 
-VERSION=1.3.0
+VERSION=1.4.0
 REGIONS="us-east-1 us-east-2 us-west-1 us-west-2 ap-south-1 ap-northeast-2 ap-southeast-1 ap-southeast-2 ap-northeast-1 ca-central-1 eu-central-1 eu-west-1 eu-west-2 eu-west-3 sa-east-1"
 
 ROOT_DIR=$(pwd)
 rm -rf pkg
 mkdir pkg
 
-HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler"
+HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler publisher"
 
 for HANDLER in ${HANDLERS}; do
 	cd ${HANDLER}

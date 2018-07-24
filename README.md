@@ -18,6 +18,7 @@ If you aren't serverless, you may be looking for [`honeyaws`](https://github.com
 - AWS ALB integration for S3 Logs
 - S3 Bucket Log integration for S3 Logs
 - MySQL RDS Integration for Cloudwatch Logs
+- Honeycomb Publisher for Lambda
 
 ## Installation
 
@@ -69,6 +70,13 @@ Enable events __Put__ and __Complete Multipart Upload__ and select the lambda be
 ### Generic JSON integration for SNS
 
 [Click here](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-sns-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/sns-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per SNS topic that you want to subscribe to.
+
+### Honeycomb Publisher for Lambda
+
+The Honeycomb Publisher for Lambda receives and publishes Honeycomb events on behalf of other Honeycomb-instrumented Lambda functions. It allows events to be sent asynchronously, rather than blocking the upstream function.
+
+[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-publisher&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/publisher.yml) to install.
+
 
 ### Other integrations
 
