@@ -50,7 +50,7 @@ func Handler(request events.S3Event) (Response, error) {
 			Key:    &record.S3.Object.Key,
 		})
 		if err != nil {
-			logrus.WithFields(logrus.Fields{
+			logrus.WithError(err).WithFields(logrus.Fields{
 				"key":    record.S3.Object.Key,
 				"bucket": record.S3.Bucket.Name,
 			}).Warn("unable to get object from bucket")
