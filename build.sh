@@ -12,7 +12,7 @@ ROOT_DIR=$(pwd)
 rm -rf pkg
 mkdir pkg
 
-HANDLERS="cloudwatch-handler s3-handler sns-handler"
+HANDLERS="cloudwatch-handler s3-handler sns-handler publisher"
 
 for HANDLER in ${HANDLERS}; do
 	cd ${HANDLER}
