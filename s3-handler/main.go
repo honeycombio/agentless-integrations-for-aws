@@ -105,6 +105,8 @@ func Handler(request events.S3Event) (Response, error) {
 				hnyEvent.Add(parsedLine)
 			}
 
+			hnyEvent.AddField("aws.s3.bucket", record.S3.Bucket.Name)
+			hnyEvent.AddField("aws.s3.object", record.S3.Object.Key)
 			hnyEvent.AddField("env", env)
 			hnyEvent.Send()
 			ok = scanner.Scan()
