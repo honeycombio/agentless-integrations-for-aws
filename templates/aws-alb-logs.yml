@@ -1,1 +1,174 @@
-
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template builds the necessary lambda infra to send s3 logs to honeycomb
+Parameters:
+  Environment:
+    Type: String
+    Default: ''
+    Description: Name of environment. This will be included in log events sent to Honeycomb.
+  HoneycombWriteKey:
+    Type: String
+    Description: Your Honeycomb write key. If KMSKeyId is set, this should be a Cyphertext Blob from KMS.
+  KMSKeyId:
+    Type: String
+    Default: ''
+    Description: 'KMS Key ID used to encrypt your Honeycomb write key (ex: a80d80aa-19b5-486a-a163-a4502b5555)'
+  HoneycombAPIHost:
+    Type: String
+    Default: https://api.honeycomb.io
+    Description: Optional. Altenative Honeycomb API host.
+  HoneycombDataset:
+    Type: String
+    Default: aws-alb-logs
+    Description: Target honeycomb dataset
+  HoneycombSampleRate:
+    Type: Number
+    Default: 100
+    Description: Sample rate. See https://honeycomb.io/docs/guides/sampling/.
+  S3BucketName:
+    Type: String
+    Description: The S3 bucket that receives your AWS ELB logs
+  MatchPatterns:
+    Type: String
+    Description: Comma-separated simple regexes to specify which s3 keys to match.
+    Default: '.*'
+  FilterPatterns:
+    Type: String
+    Description: Comma-separated simple regexes to specify which s3 keys to exclude.
+    Default: ''
+  LambdaMemorySize:
+    Type: Number
+    Default: 192
+    Description: Memory allocated to the Lambda function. Must be >= 128 and a multiple of 64. Increases this also increases CPU proportionally.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Required Parameters
+        Parameters:
+          - S3BucketName
+          - HoneycombWriteKey
+          - HoneycombDataset
+          - HoneycombSampleRate
+      - Label:
+          default: Optional Parameters
+        Parameters:
+          - MatchPatterns
+          - FilterPatterns
+          - LambdaMemorySize
+          - Environment
+          - KMSKeyId
+          - HoneycombAPIHost
+Conditions:
+  EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
+Resources:
+  S3LambdaHandler:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Code:
+        S3Bucket: honeycomb-builds
+        S3Key: honeycombio/integrations-for-aws/LATEST/ingest-handlers.zip
+      Description: Lambda function for sending alb logs to Honeycomb
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          PARSER_TYPE: regex
+          REGEX_PATTERN: '(?<P>type.+) (?P<timestamp>.+) (?P<elb>.+) (?P<client>.+) (?P<target>.+) (?P<request_processing_time>.+) (?P<target_processing_time>.+) (?P<response_processing_time>.+) (?P<elb_status_code>.+) (?P<target_status_code>.+) (?P<received_bytes>.+) (?P<sent_bytes>.+) (?P<request>".+") (?P<user_agent>".+") (?P<ssl_cipher>.+) (?P<ssl_protocol>.+) (?P<target_group_arn>.+) (?P<trace.trace_id>"Root=.+"') (?P<domain_name>".+") (?P<chosen_cert_arn>".+") (?P<unknown>.+)'
+          HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
+          KMS_KEY_ID: !Ref KMSKeyId
+          API_HOST: !Ref HoneycombAPIHost
+          DATASET: !Ref HoneycombDataset
+          SAMPLE_RATE: !Ref HoneycombSampleRate
+          TIME_FIELD_NAME: 'timestamp'
+          TIME_FIELD_FORMAT: '2006-01-02T15:04:05.9999Z'
+          MATCH_PATTERNS: !Ref MatchPatterns
+          FILTER_PATTERNS: !Ref FilterPatterns
+      FunctionName:
+        "Fn::Join":
+          - '-'
+          -
+            - S3LambdaHandler
+            - !Ref "AWS::StackName"
+      Handler: s3-handler
+      MemorySize: !Ref LambdaMemorySize
+      Role:
+        "Fn::GetAtt":
+          - LambdaIAMRole
+          - Arn
+      Runtime: go1.x
+      # s3 logs can be large, so allow for more runtime
+      Timeout: 300
+  ExecutePermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName:
+        "Fn::GetAtt":
+          - S3LambdaHandler
+          - Arn
+      Principal: 's3.amazonaws.com'
+  LambdaIAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - "lambda.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+  LambdaLogPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "lambda-create-log"
+      Roles:
+          - Ref: LambdaIAMRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: 'arn:aws:logs:*:*:*'
+  LambdaKMSPolicy:
+    Type: "AWS::IAM::Policy"
+    Condition: EncryptionEnabled
+    Properties:
+      PolicyName: "lambda-kms-decrypt"
+      Roles:
+          - Ref: LambdaIAMRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+            Resource:
+              "Fn::Join":
+                - ''
+                -
+                  - arn:aws:kms:*:*:key/
+                  - !Ref KMSKeyId
+  LambdaS3Policy:
+    Type: "AWS::IAM::Policy"
+    Condition: EncryptionEnabled
+    Properties:
+      PolicyName: "lambda-s3-getobject"
+      Roles:
+          - Ref: LambdaIAMRole
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+            Resource:
+              "Fn::Join":
+                - ''
+                -
+                  - 'arn:aws:s3:::'
+                  - !Ref S3BucketName
+                  - /*
