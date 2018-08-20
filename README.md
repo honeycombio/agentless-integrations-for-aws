@@ -11,6 +11,7 @@ This is a BETA - there may still be some bugs, and behavior may change in the fu
 - VPC Flow Log integration for Cloudwatch Logs
 - Generic JSON integration for S3 Logs
 - AWS ELB integration for S3 Logs
+- AWS ALB integration for S3 Logs
 - S3 Bucket Log integration for S3 Logs
 
 ## Installation
@@ -85,6 +86,14 @@ Used to parse ELB logs, which are saved to S3 periodically by the ELB service. Y
 [Click here to install the AWS ELB Integration](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-elb-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/aws-elb-logs.yml)
 
 After this is installed, you will need to manually configure your ELB log bucket to send events to the lambda function. See instructions above for __Sending S3 events to Lambda__.
+
+#### AWS ALB Integration for S3 Logs
+
+Used to parse ALB logs, which are saved to S3 periodically by the ALB service. You can use the __MatchPatterns__ and __FilterPatterns__ parameters to selectively target specific ALBs.
+
+[Click here to install the AWS EAB Integration](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-Alb-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/aws-alb-logs.yml)
+
+After this is installed, you will need to manually configure your ALB log bucket to send events to the lambda function. See instructions above for __Sending S3 events to Lambda__.
 
 #### AWS S3 Bucket Logs Integration
 
