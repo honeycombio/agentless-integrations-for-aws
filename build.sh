@@ -5,14 +5,14 @@ set -e
 
 ./test.sh
 
-VERSION=1.1.3
+VERSION=1.2.0
 DEPLOY_ROOT=s3://honeycomb-builds/honeycombio/integrations-for-aws
 
 ROOT_DIR=$(pwd)
 rm -rf pkg
 mkdir pkg
 
-HANDLERS="cloudwatch-handler s3-handler sns-handler"
+HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler"
 
 for HANDLER in ${HANDLERS}; do
 	cd ${HANDLER}
