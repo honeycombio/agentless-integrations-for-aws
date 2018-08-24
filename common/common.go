@@ -25,7 +25,7 @@ var (
 )
 
 const (
-	version = "1.1.2"
+	version = "1.2.0"
 )
 
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
@@ -145,4 +145,9 @@ func AddUserAgentMetadata(handler, parser string) {
 	libhoney.UserAgentAddition = fmt.Sprintf(
 		"%s (%s, %s)", libhoney.UserAgentAddition, handler, parser,
 	)
+}
+
+// GetSampleRate returns the sample rate the configured sample rate
+func GetSampleRate() uint {
+	return sampleRate
 }

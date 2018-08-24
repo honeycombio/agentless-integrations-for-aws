@@ -13,6 +13,7 @@ This is a BETA - there may still be some bugs, and behavior may change in the fu
 - AWS ELB integration for S3 Logs
 - AWS ALB integration for S3 Logs
 - S3 Bucket Log integration for S3 Logs
+- MySQL RDS Integration for Cloudwatch Logs
 
 ## Installation
 
@@ -100,6 +101,14 @@ After this is installed, you will need to manually configure your ALB log bucket
 This is used to parse S3 server access logs, which, if configured, are written to another bucket periodically by the S3 service.
 
 [Click here to install the AWS S3 Bucket Log Integration](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-s3-bucket-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/s3-bucket-logs.yml)
+
+#### MySQL RDS Integration for Cloudwatch Logs
+
+You can configure MySQL on RDS to publish its slow query and audit logs to Cloudwatch Logs. For more information, click [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.Concepts.MySQL.html#USER_LogAccess.MySQLDB.PublishtoCloudWatchLogs).
+
+After configuring RDS to write to Cloudwatch Logs, you can install the MySQL RDS Integration below and get rich MySQL event data into Honeycomb in a matter of minutes. Simply supply one or more RDS Cloudwatch Log groups to monitor, provide your Honeycomb write key, and go!
+
+[Click here to install the Mysql RDS Integration](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-rds-mysql-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-rds-mysql.yml)
 
 ## How it works
 
