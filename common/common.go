@@ -18,14 +18,15 @@ import (
 )
 
 var (
-	sampleRate uint
-	writeKey   string
-	apiHost    string
-	dataset    string
+	sampleRate   uint
+	writeKey     string
+	apiHost      string
+	dataset      string
+	errorDataset string
 )
 
 const (
-	version = "1.2.0"
+	version = "1.3.0"
 )
 
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
@@ -79,15 +80,17 @@ func InitHoneycombFromEnvVars() error {
 		}
 	}
 
-	apiHost := os.Getenv("API_HOST")
+	apiHost = os.Getenv("API_HOST")
 	if apiHost == "" {
 		apiHost = "https://api.honeycomb.io"
 	}
 
-	dataset := os.Getenv("DATASET")
+	dataset = os.Getenv("DATASET")
 	if dataset == "" {
 		dataset = "honeycomb-cloudwatch-logs"
 	}
+
+	errorDataset = os.Getenv("ERROR_DATASET")
 
 	libhoney.UserAgentAddition = fmt.Sprintf("integrations-for-aws/%s", version)
 
@@ -150,4 +153,17 @@ func AddUserAgentMetadata(handler, parser string) {
 // GetSampleRate returns the sample rate the configured sample rate
 func GetSampleRate() uint {
 	return sampleRate
+}
+
+// WriteErrorEvent writes the error and optional fields to the Error Dataset,
+// if an error dataset was specified
+func WriteErrorEvent(err error, errorType string, fields map[string]interface{}) {
+	if errorDataset != "" {
+		ev := libhoney.NewEvent()
+		ev.Dataset = errorDataset
+		ev.AddField("meta.honeycomb_error", err.Error())
+		ev.AddField("meta.error_type", errorType)
+		ev.Add(fields)
+		ev.Send()
+	}
 }

@@ -43,6 +43,9 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 		if err != nil {
 			logrus.WithError(err).WithField("line", event.Message).
 				Warn("unable to parse line")
+			common.WriteErrorEvent(err, "parse error", map[string]interface{}{
+				"meta.raw_message": event.Message,
+			})
 			continue
 		}
 		hnyEvent := libhoney.NewEvent()

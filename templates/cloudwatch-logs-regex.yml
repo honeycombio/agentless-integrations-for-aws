@@ -42,6 +42,10 @@ Parameters:
     Type: String
     Default: ''
     Description: Timestamp format to use, if TimeFieldName is set. (strftime and Golang time.Parse supported)
+  ErrorDataset:
+    Type: String
+    Default: ''
+    Description: If set, write error events such as parsing errors to this dataset. Can be the same as your primary dataset.
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -58,6 +62,7 @@ Metadata:
         Parameters:
           - Environment
           - KMSKeyId
+          - ErrorDataset
           - FilterPattern
           - TimeFieldName
           - TimeFieldFormat
@@ -84,6 +89,7 @@ Resources:
           SAMPLE_RATE: !Ref HoneycombSampleRate
           TIME_FIELD_NAME: !Ref TimeFieldName
           TIME_FIELD_FORMAT: !Ref TimeFieldFormat
+          ERROR_DATASET: !Ref ErrorDataset
       FunctionName:
         "Fn::Join":
           - '-'

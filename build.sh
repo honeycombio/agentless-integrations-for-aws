@@ -5,7 +5,7 @@ set -e
 
 ./test.sh
 
-VERSION=1.2.0
+VERSION=1.3.0
 DEPLOY_ROOT=s3://honeycomb-builds/honeycombio/integrations-for-aws
 
 ROOT_DIR=$(pwd)

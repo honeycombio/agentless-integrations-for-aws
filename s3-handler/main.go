@@ -91,6 +91,9 @@ func Handler(request events.S3Event) (Response, error) {
 			if err != nil {
 				logrus.WithError(err).WithField("line", scanner.Text()).
 					Warn("failed to parse line")
+				common.WriteErrorEvent(err, "parse error", map[string]interface{}{
+					"meta.raw_message": scanner.Text(),
+				})
 				continue
 			}
 			hnyEvent := libhoney.NewEvent()
