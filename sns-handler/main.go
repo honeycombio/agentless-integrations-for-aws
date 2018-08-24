@@ -36,6 +36,9 @@ func Handler(request events.SNSEvent) (Response, error) {
 		if err != nil {
 			logrus.WithError(err).WithField("line", event.SNS.Message).
 				Warn("unable to parse line")
+			common.WriteErrorEvent(err, "parse error", map[string]interface{}{
+				"meta.raw_message": event.SNS.Message,
+			})
 			continue
 		}
 		hnyEvent := libhoney.NewEvent()

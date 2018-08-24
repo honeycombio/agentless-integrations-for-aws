@@ -47,6 +47,10 @@ Parameters:
     Type: String
     Description: Comma-separated simple regexes to specify which s3 keys to exclude.
     Default: ''
+  ErrorDataset:
+    Type: String
+    Default: ''
+    Description: If set, write error events such as parsing errors to this dataset. Can be the same as your primary dataset.
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -65,6 +69,7 @@ Metadata:
           - LambdaMemorySize
           - Environment
           - KMSKeyId
+          - ErrorDataset
           - TimeFieldName
           - TimeFieldFormat
           - HoneycombAPIHost
@@ -91,6 +96,7 @@ Resources:
           TIME_FIELD_FORMAT: !Ref TimeFieldFormat
           MATCH_PATTERNS: !Ref MatchPatterns
           FILTER_PATTERNS: !Ref FilterPatterns
+          ERROR_DATASET: !Ref ErrorDataset
       FunctionName:
         "Fn::Join":
           - '-'
