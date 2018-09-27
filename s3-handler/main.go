@@ -60,7 +60,7 @@ func Handler(request events.S3Event) (Response, error) {
 		reader := resp.Body
 		// figure out if this file is gzipped
 		if resp.ContentType != nil {
-			if *resp.ContentType == "application/x-gzip" {
+			if *resp.ContentType == "application/x-gzip" || *resp.ContentType == "application/octet-stream" {
 				reader, err = gzip.NewReader(resp.Body)
 				if err != nil {
 					logrus.WithError(err).WithField("key", record.S3.Object.Key).
