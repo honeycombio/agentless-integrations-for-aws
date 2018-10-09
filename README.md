@@ -151,6 +151,8 @@ Lambda's execution time is capped at 5 minutes. If you upload sufficiently large
 
 Increasing the MemorySize of the Lambda also increases its CPU allocation. If you are unable to break up your logs into smaller objects, and you find that the logs aren't being processed in the allowed 5 minutes, increasing MemorySize can lead to faster processing of events.
 
+The S3 integration will interpret object content types `application/x-gzip` and `application/octet-stream` as gzipped content, and will attempt to decompress them.
+
 ## Encrypting your Write Key
 
 When installing the integration, you must supply your honeycomb write key via Cloudformation parameter. Cloudformation parameters are not encrypted, and are plainly viewable to anyone with access to your Cloudformation stacks. For this reason, we strongly recommend that your Honeycomb write key be encrypted. To encrypt your key, use AWS's KMS service.
