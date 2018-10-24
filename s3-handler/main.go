@@ -59,7 +59,10 @@ func Handler(request events.S3Event) (Response, error) {
 
 		reader := resp.Body
 		// figure out if this file is gzipped
-		if resp.ContentType != nil {
+		if resp.ContentEncoding != nil && *resp.ContentEncoding == "gzip" {
+			// Skip attempting to unzip, the default http client already unzipped.
+			// see https://github.com/aws/aws-sdk-go/issues/1292
+		} else if resp.ContentType != nil {
 			if *resp.ContentType == "application/x-gzip" || *resp.ContentType == "application/octet-stream" {
 				reader, err = gzip.NewReader(resp.Body)
 				if err != nil {
