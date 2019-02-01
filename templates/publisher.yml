@@ -75,8 +75,13 @@ Resources:
     Type: "AWS::Lambda::Function"
     Properties:
       Code:
-        S3Bucket: honeycomb-builds
-        S3Key: honeycombio/integrations-for-aws/LATEST/ingest-handlers.zip
+        S3Bucket:
+          "Fn::Join":
+          - '-'
+          -
+            - honeycomb-integrations
+            - !Ref "AWS::Region"
+        S3Key: agentless-integrations-for-aws/LATEST/ingest-handlers.zip
       Description: Lambda function for publishing asynchronous events from Lambda
       Environment:
         Variables:
