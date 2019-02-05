@@ -27,7 +27,7 @@ func extractPayload(data map[string]interface{}) (*payload, error) {
 		return nil, fmt.Errorf("unable to find data in payload")
 	}
 	if timestamp, ok := data["time"].(string); ok {
-		if parsedTime, err := time.Parse("2006-01-02T15:04:05.000000Z", timestamp); err == nil {
+		if parsedTime, err := time.Parse(time.RFC3339, timestamp); err == nil {
 			p.time = parsedTime
 		}
 	}
