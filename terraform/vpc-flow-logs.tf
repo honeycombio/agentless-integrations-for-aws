@@ -62,8 +62,9 @@ EOF
 }
 
 resource "aws_lambda_function" "vpc_flow_log" {
-  s3_bucket        = "honeycomb-builds"
-  s3_key           = "honeycombio/integrations-for-aws/LATEST/ingest-handlers.zip"
+  # change me to your region
+  s3_bucket        = "honeycomb-integrations-us-east-1"
+  s3_key           = "agentless-integrations-for-aws/LATEST/ingest-handlers.zip"
   function_name    = "honeycomb-vpc-flow-logs"
   role             = "${aws_iam_role.vpc_flow_log.arn}"
   handler          = "cloudwatch-handler"

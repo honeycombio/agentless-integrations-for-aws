@@ -57,8 +57,9 @@ EOF
 }
 
 resource "aws_lambda_function" "honeycomb_mysql_rds_logs" {
-  s3_bucket        = "honeycomb-builds"
-  s3_key           = "honeycombio/integrations-for-aws/LATEST/ingest-handlers.zip"
+  # change me to your region
+  s3_bucket        = "honeycomb-integrations-us-east-1"
+  s3_key           = "agentless-integrations-for-aws/LATEST/ingest-handlers.zip"
   function_name    = "honeycomb-mysql-rds-logs"
   role             = "${aws_iam_role.honeycomb_mysql_rds_logs_role.arn}"
   handler          = "mysql-handler"

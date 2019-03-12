@@ -62,8 +62,9 @@ EOF
 }
 
 resource "aws_lambda_function" "cloudwatch_logs" {
-  s3_bucket        = "honeycomb-builds"
-  s3_key           = "honeycombio/integrations-for-aws/LATEST/ingest-handlers.zip"
+  # change me to your region
+  s3_bucket        = "honeycomb-integrations-us-east-1"
+  s3_key           = "agentless-integrations-for-aws/LATEST/ingest-handlers.zip"
   function_name    = "honeycomb-cloudwatch-logs-integration"
   role             = "${aws_iam_role.honeycomb_cloudwatch_logs.arn}"
   handler          = "cloudwatch-handler"
