@@ -108,7 +108,7 @@ func main() {
 	parser = &postgresql.Parser{}
 	parser.Init(&postgresql.Options{})
 
-	common.AddUserAgentMetadata("rds", "mysql")
+	common.AddUserAgentMetadata("rds", "postgresql")
 
 	env = os.Getenv("ENVIRONMENT")
 	scrubQuery = os.Getenv("SCRUB_QUERY")
