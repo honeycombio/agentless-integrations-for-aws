@@ -18,6 +18,7 @@ If you aren't serverless, you may be looking for [`honeyaws`](https://github.com
 - AWS ALB integration for S3 Logs
 - S3 Bucket Log integration for S3 Logs
 - MySQL RDS Integration for Cloudwatch Logs
+- PostgreSQL RDS Integration for Cloudwatch Logs
 - Honeycomb Publisher for Lambda
 
 ## Installation
@@ -114,11 +115,11 @@ This is used to parse S3 server access logs, which, if configured, are written t
 
 [Click here to install the AWS S3 Bucket Log Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-s3-bucket-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/s3-bucket-logs.yml)
 
-#### MySQL RDS Integration for Cloudwatch Logs
+#### MySQL & PostgreSQL RDS Integration for Cloudwatch Logs
 
-You can configure MySQL on RDS to publish its slow query and audit logs to Cloudwatch Logs. For more information, click [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.Concepts.MySQL.html#USER_LogAccess.MySQLDB.PublishtoCloudWatchLogs).
+You can configure MySQL on RDS to publish its slow query and audit logs to Cloudwatch Logs. For more information, click [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch).
 
-After configuring RDS to write to Cloudwatch Logs, you can install the MySQL RDS Integration below and get rich MySQL event data into Honeycomb in a matter of minutes. Simply supply one or more RDS Cloudwatch Log groups to monitor, provide your Honeycomb write key, and go!
+After configuring RDS to write to Cloudwatch Logs, you can install the MySQL or PostgreSQL RDS Integration below and get rich MySQL or PostgreSQL event data into Honeycomb in a matter of minutes. Simply supply one or more RDS Cloudwatch Log groups to monitor, provide your Honeycomb write key, and go!
 
 [Click here to install the Mysql RDS Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-rds-mysql-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-rds-mysql.yml)
 
