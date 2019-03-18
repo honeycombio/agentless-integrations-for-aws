@@ -197,6 +197,13 @@ Record the `CiphertextBlob` and the last part of the Key ID (example: `a38f80cc-
 
 See the [`terraform`](terraform) directory in this repo for examples of Terraform configs.
 
+If you want to get up and running with configurable production-ready modules, see the modules published by the [`terra-farm`](https://github.com/terra-farm) community
+on the Terraform Registry: 
+
+https://registry.terraform.io/modules/terra-farm/honeycomb/aws/
+
+Sources can be found on [their Github repository](https://github.com/terra-farm/terraform-aws-honeycomb).
+
 ### Building the stack with the AWS CLI
 
 If you need to turn up several stacks, or just don't like the Cloudformation UI, use the [AWS CLI](https://aws.amazon.com/cli/) and the script below. You'll also find this script under `examples/deploy-generic-json.sh`. You'll need to update values for `STACK_NAME`, `LOG_GROUP_NAME`, `HONEYCOMB_WRITE_KEY`, `KMS_KEY_ID`.
