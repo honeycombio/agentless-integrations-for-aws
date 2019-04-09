@@ -66,6 +66,7 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 			Message: fmt.Sprintf("failed to parse cloudwatch event data: %s", err.Error()),
 		}, err
 	}
+
 	for _, event := range data.LogEvents {
 		parsedLine, err := parser.ParseLine(event.Message)
 		if err != nil {
@@ -83,6 +84,9 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 		hnyEvent := libhoney.NewEvent()
 		// add the actual event data
 		hnyEvent.Add(payload.data)
+		// Include the logstream that this data came from to make it easier to find the source
+		// in Cloudwatch
+		hnyEvent.AddField("aws.cloudwatch.logstream", data.LogStream)
 
 		// If we have sane values for other fields, set those as well
 		if !payload.time.IsZero() {
