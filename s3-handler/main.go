@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -27,6 +28,7 @@ type Response struct {
 var parser parsers.LineParser
 var parserType, timeFieldName, timeFieldFormat, env string
 var matchPatterns, filterPatterns []string
+var bufferSize uint
 
 func Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -81,6 +83,8 @@ func Handler(request events.S3Event) (Response, error) {
 		}
 		linesRead := 0
 		scanner := bufio.NewScanner(reader)
+		buffer := make([]byte, bufferSize)
+		scanner.Buffer(buffer, int(bufferSize))
 		ok := scanner.Scan()
 		for ok {
 			linesRead++
@@ -156,11 +160,20 @@ func main() {
 
 	matchPatterns = []string{".*"}
 	filterPatterns = []string{}
+	bufferSize = 1024 * 64
 	if os.Getenv("MATCH_PATTERNS") != "" {
 		matchPatterns = strings.Split(os.Getenv("MATCH_PATTERNS"), ",")
 	}
 	if os.Getenv("FILTER_PATTERNS") != "" {
 		filterPatterns = strings.Split(os.Getenv("FILTER_PATTERNS"), ",")
+	}
+	if os.Getenv("BUFFER_SIZE") != "" {
+		size, err := strconv.Atoi(os.Getenv("BUFFER_SIZE"))
+		if err != nil {
+			logrus.WithField("buffer_size", os.Getenv("BUFFER_SIZE")).Error("could not parse BUFFER_SIZE env variable into an int, defaulting to 64KiB")
+		} else {
+			bufferSize = uint(size)
+		}
 	}
 
 	lambda.Start(Handler)
