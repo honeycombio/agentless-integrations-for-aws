@@ -51,6 +51,10 @@ Parameters:
     Type: String
     Default: ''
     Description: If set, write error events such as parsing errors to this dataset. Can be the same as your primary dataset.
+  BufferSize:
+    Type: String
+    Default: '65536'
+    Description: Can be used to override the default scan buffer size of 64KiB. If you get token too long errors, set this to the maximum size of your individual log lines.
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -102,6 +106,7 @@ Resources:
           MATCH_PATTERNS: !Ref MatchPatterns
           FILTER_PATTERNS: !Ref FilterPatterns
           ERROR_DATASET: !Ref ErrorDataset
+          BUFFER_SIZE: !Ref BufferSize
       FunctionName:
         "Fn::Join":
           - '-'
