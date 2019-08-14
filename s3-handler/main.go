@@ -118,6 +118,10 @@ func Handler(request events.S3Event) (Response, error) {
 			hnyEvent.AddField("aws.s3.bucket", record.S3.Bucket.Name)
 			hnyEvent.AddField("aws.s3.object", record.S3.Object.Key)
 			hnyEvent.AddField("env", env)
+			fields := hnyEvent.Fields()
+			for _, field := range common.GetFilterFields() {
+				delete(fields, field)
+			}
 			hnyEvent.Send()
 			ok = scanner.Scan()
 		}

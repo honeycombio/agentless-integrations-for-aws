@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -23,10 +24,11 @@ var (
 	apiHost      string
 	dataset      string
 	errorDataset string
+	filterFields []string
 )
 
 const (
-	version = "1.7.0"
+	version = "1.9.0"
 )
 
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
@@ -39,7 +41,7 @@ func InitHoneycombFromEnvVars() error {
 		i, err := strconv.Atoi(os.Getenv("SAMPLE_RATE"))
 		if err != nil {
 			logrus.WithField("sample_rate", os.Getenv("SAMPLE_RATE")).
-				Warn("Warning: unable to parse sample rate %s, falling back to 1.")
+				Warn("Warning: unable to parse sample rate, falling back to 1.")
 		}
 		sampleRate = uint(i)
 	}
@@ -166,4 +168,25 @@ func WriteErrorEvent(err error, errorType string, fields map[string]interface{})
 		ev.Add(fields)
 		ev.Send()
 	}
+}
+
+// GetFilterFields returns a list of fields to be deleted from an event before it is sent to Honeycomb
+// If FILTER_FIELDS is not set, returns an empty list.
+func GetFilterFields() []string {
+	if filterFields != nil {
+		return filterFields
+	}
+
+	filterFields = []string{}
+
+	filtersString := os.Getenv("FILTER_FIELDS")
+	if filtersString == "" {
+		// return an empty (but non-nil) filterField list
+		return filterFields
+	}
+
+	// FILTER_FIELDS is a comma-separated string of fields
+	filterFields = strings.Split(filtersString, ",")
+
+	return filterFields
 }
