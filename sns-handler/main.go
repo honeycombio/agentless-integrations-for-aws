@@ -54,6 +54,10 @@ func Handler(request events.SNSEvent) (Response, error) {
 		}
 
 		hnyEvent.AddField("env", env)
+		fields := hnyEvent.Fields()
+		for _, field := range common.GetFilterFields() {
+			delete(fields, field)
+		}
 		hnyEvent.Send()
 	}
 

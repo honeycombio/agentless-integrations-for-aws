@@ -31,6 +31,10 @@ Parameters:
     Type: String
     Default: ''
     Description: The filtering expressions that restrict which cloudwatch log lines get sent
+  FilterFields:
+    Type: String
+    Description: Comma-separated simple strings to specify which field names to remove from events
+    Default: ''
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -44,6 +48,7 @@ Metadata:
       - Label:
           default: Optional Parameters
         Parameters:
+          - FilterFields
           - Environment
           - KMSKeyId
           - FilterPattern
@@ -75,6 +80,7 @@ Resources:
           SAMPLE_RATE: !Ref HoneycombSampleRate
           TIME_FIELD_NAME: 'start_time'
           TIME_FIELD_FORMAT: '%s(%L)?'
+          FILTER_FIELDS: !Ref FilterFields
       FunctionName:
         "Fn::Join":
           - '-'

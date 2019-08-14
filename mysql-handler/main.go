@@ -76,6 +76,10 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 			if env != "" {
 				hnyEvent.AddField("env", env)
 			}
+			fields := hnyEvent.Fields()
+			for _, field := range common.GetFilterFields() {
+				delete(fields, field)
+			}
 			// Sampling is done in the parser for greater efficiency
 			hnyEvent.SendPresampled()
 		}

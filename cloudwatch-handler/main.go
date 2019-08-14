@@ -63,6 +63,10 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 		hnyEvent.AddField("env", env)
 		hnyEvent.AddField("aws.cloudwatch.group", data.LogGroup)
 		hnyEvent.AddField("aws.cloudwatch.stream", data.LogStream)
+		fields := hnyEvent.Fields()
+		for _, field := range common.GetFilterFields() {
+			delete(fields, field)
+		}
 		hnyEvent.Send()
 	}
 

@@ -63,6 +63,10 @@ Parameters:
     Type: String
     Default: ''
     Description: If set, write error events such as parsing errors to this dataset. Can be the same as your primary dataset.
+  FilterFields:
+    Type: String
+    Description: Comma-separated simple strings to specify which field names to remove from events
+    Default: ''
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -84,6 +88,7 @@ Metadata:
           - Environment
           - KMSKeyId
           - ErrorDataset
+          - FilterFields
           - FilterPattern
           - TimeFieldName
           - TimeFieldFormat
@@ -120,6 +125,7 @@ Resources:
           TIME_FIELD_NAME: !Ref TimeFieldName
           TIME_FIELD_FORMAT: !Ref TimeFieldFormat
           ERROR_DATASET: !Ref ErrorDataset
+          FILTER_FIELDS: !Ref FilterFields
       FunctionName:
         "Fn::Join":
           - '-'

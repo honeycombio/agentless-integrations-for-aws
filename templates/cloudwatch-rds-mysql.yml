@@ -58,6 +58,10 @@ Parameters:
     AllowedValues:
       - true
       - false
+  FilterFields:
+    Type: String
+    Description: Comma-separated simple strings to specify which field names to remove from events
+    Default: ''
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -81,6 +85,7 @@ Metadata:
           - FilterPattern
           - HoneycombAPIHost
           - ScrubQuery
+          - FilterFields
 Conditions:
   EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
   LogGroup1Enabled: !Not [!Equals [!Ref LogGroupName1, '']]
@@ -110,6 +115,7 @@ Resources:
           DATASET: !Ref HoneycombDataset
           SAMPLE_RATE: !Ref HoneycombSampleRate
           SCRUB_QUERY: !Ref ScrubQuery
+          FILTER_FIELDS: !Ref FilterFields
       FunctionName:
         "Fn::Join":
           - '-'
