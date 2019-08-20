@@ -74,7 +74,27 @@ Enable events __Put__ and __Complete Multipart Upload__ and select the lambda be
 
 ### Honeycomb Publisher for Lambda
 
-The Honeycomb Publisher for Lambda receives and publishes Honeycomb events on behalf of other Honeycomb-instrumented Lambda functions. It allows events to be sent asynchronously, rather than blocking the upstream function.
+The Honeycomb Publisher for Lambda receives and publishes Honeycomb events on behalf of other Honeycomb-instrumented Lambda functions. It allows events to be sent asynchronously, rather 
+than blocking the upstream function. The source function is modified so that its instrumentation goes to STDOUT. Lambda writes this output to a Cloudwatch Log Group, and the publisher subscribes to one or more Cloudwatch Log Groups and sends the instrumentation on to Honeycomb.
+
+A sample event looks like this. Fields are stored in the `data` map, the event timestamp comes from the `time` field, and the target dataset is specified in `dataset`. If `dataset` is missing, events go to a fallback dataset.
+
+```json
+{
+    "data": {
+        "key": "8825.samplerate.int32c",
+        "object_size": 537310,
+        "open_elapsed_ms": 111,
+        "reached_eof": true,
+        "stream_total_ms": 689,
+        "sum_bytes_read": 537310
+    },
+    "time": "2019-08-20T18:53:08.443956295Z",
+    "dataset": "target-dataset"
+}
+```
+
+[Honeycomb Beelines](https://docs.honeycomb.io/getting-data-in/beelines/) and SDKs have built-in support for output to STDOUT. Consult the documentation for your language to learn how to enable it.
 
 [Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-publisher&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/publisher.yml) to install.
 
