@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -29,6 +30,7 @@ var parser parsers.LineParser
 var parserType, timeFieldName, timeFieldFormat, env string
 var matchPatterns, filterPatterns []string
 var bufferSize uint
+var forceGunzip bool
 
 func Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -47,40 +49,12 @@ func Handler(request events.S3Event) (Response, error) {
 			}).Info("key doesn't match specified patterns, skipping")
 			continue
 		}
-		resp, err := svc.GetObject(&s3.GetObjectInput{
-			Bucket: &record.S3.Bucket.Name,
-			Key:    &record.S3.Object.Key,
-		})
+
+		reader, err := getReaderForKey(svc, record.S3.Bucket.Name, record.S3.Object.Key)
 		if err != nil {
-			logrus.WithError(err).WithFields(logrus.Fields{
-				"key":    record.S3.Object.Key,
-				"bucket": record.S3.Bucket.Name,
-			}).Warn("unable to get object from bucket")
 			continue
 		}
 
-		reader := resp.Body
-		// figure out if this file is gzipped
-		if resp.ContentEncoding != nil && *resp.ContentEncoding == "gzip" {
-			// Skip attempting to unzip, the default http client already unzipped.
-			// see https://github.com/aws/aws-sdk-go/issues/1292
-		} else if resp.ContentType != nil {
-			if *resp.ContentType == "application/x-gzip" || *resp.ContentType == "application/octet-stream" {
-				reader, err = gzip.NewReader(resp.Body)
-				if err != nil {
-					logrus.WithError(err).WithField("key", record.S3.Object.Key).
-						Warn("unable to create gzip reader for object")
-					continue
-				}
-			}
-		} else if strings.HasSuffix(record.S3.Object.Key, ".gz") {
-			reader, err = gzip.NewReader(resp.Body)
-			if err != nil {
-				logrus.WithError(err).WithField("key", record.S3.Object.Key).
-					Warn("unable to create gzip reader for object")
-				continue
-			}
-		}
 		linesRead := 0
 		scanner := bufio.NewScanner(reader)
 		buffer := make([]byte, bufferSize)
@@ -179,6 +153,66 @@ func main() {
 			bufferSize = uint(size)
 		}
 	}
+	if strings.ToLower(os.Getenv("FORCE_GUNZIP")) == "true" {
+		forceGunzip = true
+	}
 
 	lambda.Start(Handler)
+}
+
+func getReaderForKey(svc *s3.S3, bucket, key string) (io.ReadCloser, error) {
+	resp, err := svc.GetObject(&s3.GetObjectInput{
+		Bucket: &bucket,
+		Key:    &key,
+	})
+	if err != nil {
+		logrus.WithError(err).WithFields(logrus.Fields{
+			"bucket": bucket,
+			"key":    key,
+		}).Warn("unable to get object from bucket")
+		return nil, err
+	}
+
+	reader := resp.Body
+	// See https://github.com/aws/aws-sdk-go/issues/1292
+	// The default HTTP transport that the AWS SDK uses will decompress objects transparently
+	// if the Content Encoding is gzip. Not everyone or everything properly sets the Content-Encoding
+	// header on their S3 objects, so we could be trying to process gzipped objects and not know it.
+	// Unfortunately, to work around this, the end-user will need to tell us that's what's happening with the FORCE_GZIP env variable.
+
+	// What if there is a mix of gzipped objects and non-gzipped objects? The only way to know is
+	// to attempt to uncompress the object and see if it's gzipped. Unfortunately, this causes us to eat part of
+	// the object Body, so if we're wrong, we need to retry.
+	if forceGunzip {
+		reader, err = gzip.NewReader(resp.Body)
+		if err == nil {
+			return reader, nil
+		} else if err == gzip.ErrHeader {
+			logrus.WithError(err).WithField("key", key).
+				Warn("not a gzipped object, retrying without gzip")
+		} else {
+			logrus.WithError(err).WithField("key", key).
+				Warn("unable to create gzip reader for object")
+			return nil, err
+		}
+		// clean up resources - this body no good now that we've called Read
+		// (we could optimize a way around this but Not Today)
+		resp.Body.Close()
+
+		// Retry fetching the object
+		resp, err := svc.GetObject(&s3.GetObjectInput{
+			Bucket: &bucket,
+			Key:    &key,
+		})
+		if err != nil {
+			logrus.WithError(err).WithFields(logrus.Fields{
+				"bucket": bucket,
+				"key":    key,
+			}).Warn("unable to get object from bucket")
+			return nil, err
+		}
+		reader = resp.Body
+	}
+
+	return reader, nil
 }
