@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/credentials"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -39,6 +41,7 @@ func TestGetReaderForKey(t *testing.T) {
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 		Endpoint:         aws.String(server.URL),
+		Credentials:      credentials.AnonymousCredentials,
 	})
 
 	reader, err := getReaderForKey(svc, "bucket", "key")
@@ -68,6 +71,7 @@ func TestGetReaderForKey(t *testing.T) {
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 		Endpoint:         aws.String(server.URL),
+		Credentials:      credentials.AnonymousCredentials,
 	})
 
 	reader, err = getReaderForKey(svc, "bucket", "key")
@@ -100,6 +104,7 @@ func TestGetReaderForKey(t *testing.T) {
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 		Endpoint:         aws.String(server.URL),
+		Credentials:      credentials.AnonymousCredentials,
 	})
 
 	reader, err = getReaderForKey(svc, "bucket", "gzipped object no header")
@@ -144,6 +149,7 @@ func TestGetReaderForKey(t *testing.T) {
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 		Endpoint:         aws.String(server.URL),
+		Credentials:      credentials.AnonymousCredentials,
 	})
 
 	reader, err = getReaderForKey(svc, "bucket", "key")

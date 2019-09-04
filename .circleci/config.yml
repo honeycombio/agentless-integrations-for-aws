@@ -1,0 +1,29 @@
+# Use the latest 2.1 version of CircleCI pipeline processing engine, see https://circleci.com/docs/2.0/configuration-reference/
+version: 2.1
+
+executors:
+  go:
+    parameters:
+      goversion:
+        type: string
+        default: "12"
+    working_directory: /go/src/github.com/honeycombio/agentless-integrations-for-aws
+    docker:
+      - image: circleci/golang:1.<< parameters.goversion >>
+
+jobs:
+  run_tests:
+    executor: go
+    steps:
+      - checkout
+      # TODO also validate templates
+      - run: go get -v -t -d ./...
+      - run: go test -v ./...
+
+# Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
+workflows:
+  version: 2
+  run_tests:
+    jobs:
+      - run_tests
+      # TODO build and deploy here
