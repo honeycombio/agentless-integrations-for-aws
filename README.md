@@ -68,6 +68,8 @@ Enable events __Put__ and __Complete Multipart Upload__ and select the lambda be
 
 ![alt text](docs/s3_step3.png)
 
+**Note**: The S3 integration respects the `Content-Encoding` header on the object when deciding to decompress. If your files are gzip-compressed but do not have `Content-Encoding: gzip` set, you will need to set the `ForceGunzip` option to true.
+
 ### Generic JSON integration for SNS
 
 [Click here](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-sns-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/sns-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per SNS topic that you want to subscribe to.

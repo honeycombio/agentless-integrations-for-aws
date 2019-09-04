@@ -59,6 +59,10 @@ Parameters:
     Type: String
     Description: Comma-separated simple strings to specify which field names to remove from events
     Default: ''
+  ForceGunzip:
+    Type: String
+    Description: If set to true, forces each object through gzip decompression, falling back to no decompression if that fails. You should only need this if you are trying to process gzip-compressed objects and have not set Content-Encoding.
+    Default: 'false'
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -73,6 +77,7 @@ Metadata:
           default: Optional Parameters
         Parameters:
           - FilterFields
+          - ForceGunzip
           - MatchPatterns
           - FilterPatterns
           - LambdaMemorySize
@@ -113,6 +118,7 @@ Resources:
           ERROR_DATASET: !Ref ErrorDataset
           BUFFER_SIZE: !Ref BufferSize
           FILTER_FIELDS: !Ref FilterFields
+          FORCE_GUNZIP: !Ref ForceGunzip
       FunctionName:
         "Fn::Join":
           - '-'
