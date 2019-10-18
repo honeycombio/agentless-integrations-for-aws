@@ -1,4 +1,9 @@
 # agentless-integrations-for-aws Changelog
+
+## 2.0.1 2019-08-18
+
+- Updates ALB regex template to support newer ALB fields. See [#24](https://github.com/honeycombio/agentless-integrations-for-aws/pull/24).
+
 ## 2.0.0 2019-09-04
 
 Major version increase due to a breaking change in the S3 Integration. In the past we've tried to support processing gzip-compressed objects based on its `Content-Type` header or filename extension. This was dubious because these aren't reliable indicators of whether or not content is gzipped. The correct way to store gzipped content is to set the `Content-Encoding` header in S3 with your object. The S3 handler now looks at this header exclusively. If you have gzipped content in your buckets that is not stored with the correct `Content-Encoding`, you can still force processing using gzip by setting the new `ForceGunzip` parameter to `true` in the Cloudformation template, or by setting `FORCE_GUNZIP=true` in the lambda environment. The handler will attempt to decompress the object, then fall back to uncompressed processing if that fails.
