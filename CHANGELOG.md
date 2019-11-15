@@ -1,5 +1,10 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.0.2 2019-11-15
+
+- Fixes an issue [with panics on invalid JSON
+  payloads](https://github.com/honeycombio/agentless-integrations-for-aws/pull/25).
+
 ## 2.0.1 2019-08-18
 
 - Updates ALB regex template to support newer ALB fields. See [#24](https://github.com/honeycombio/agentless-integrations-for-aws/pull/24).
