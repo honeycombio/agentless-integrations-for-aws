@@ -80,6 +80,7 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 		if err != nil {
 			logrus.WithError(err).WithField("line", event.Message).
 				Warn("unable to get event payload from line, skipping")
+			continue
 		}
 		hnyEvent := libhoney.NewEvent()
 		// add the actual event data
