@@ -25,7 +25,7 @@ Parameters:
     Default: 1
     Description: Sample rate. See https://honeycomb.io/docs/guides/sampling/.
   LogLinePrefix:
-    Type: Number
+    Type: String
     Default: '%t [%p-%l] %u@%d'
     Description: The prefix of each log line. See https://www.postgresql.org/docs/current/runtime-config-logging.html#GUC-LOG-LINE-PREFIX
   LogGroupName:
