@@ -109,8 +109,10 @@ func main() {
 	}
 	defer libhoney.Close()
 
+	logLinePrefix := os.Getenv("LOG_LINE_PREFIX")
+
 	parser = &postgresql.Parser{}
-	parser.Init(&postgresql.Options{})
+	parser.Init(&postgresql.Options{LogLinePrefix: logLinePrefix})
 
 	common.AddUserAgentMetadata("rds", "postgresql")
 
