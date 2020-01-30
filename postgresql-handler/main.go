@@ -73,7 +73,6 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 			}
 			hnyEvent.Add(e.Data)
 			hnyEvent.Timestamp = e.Timestamp
-			hnyEvent.SampleRate = uint(e.SampleRate)
 			if env != "" {
 				hnyEvent.AddField("env", env)
 			}
