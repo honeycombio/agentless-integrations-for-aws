@@ -24,6 +24,10 @@ Parameters:
     Type: Number
     Default: 1
     Description: Sample rate. See https://honeycomb.io/docs/guides/sampling/.
+  LogLinePrefix:
+    Type: String
+    Default: '%t [%p-%l] %u@%d'
+    Description: The prefix of each log line. See https://www.postgresql.org/docs/current/runtime-config-logging.html#GUC-LOG-LINE-PREFIX
   LogGroupName:
     Type: String
     Description: The name of the AWS Cloudwatch Log Group to subscribe to
@@ -75,6 +79,7 @@ Metadata:
       - Label:
           default: Optional Parameters
         Parameters:
+          - LogLinePrefix
           - LogGroupName1
           - LogGroupName2
           - LogGroupName3
@@ -115,6 +120,7 @@ Resources:
           DATASET: !Ref HoneycombDataset
           SAMPLE_RATE: !Ref HoneycombSampleRate
           SCRUB_QUERY: !Ref ScrubQuery
+          LOG_LINE_PREFIX: !Ref LogLinePrefix
           FILTER_FIELDS: !Ref FilterFields
       FunctionName:
         "Fn::Join":

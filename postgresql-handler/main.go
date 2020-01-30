@@ -73,7 +73,6 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 			}
 			hnyEvent.Add(e.Data)
 			hnyEvent.Timestamp = e.Timestamp
-			hnyEvent.SampleRate = uint(e.SampleRate)
 			if env != "" {
 				hnyEvent.AddField("env", env)
 			}
@@ -81,8 +80,8 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 			for _, field := range common.GetFilterFields() {
 				delete(fields, field)
 			}
-			// Sampling is done in the parser for greater efficiency
-			hnyEvent.SendPresampled()
+
+			hnyEvent.Send()
 		}
 		wg.Done()
 	}()
@@ -109,8 +108,10 @@ func main() {
 	}
 	defer libhoney.Close()
 
+	logLinePrefix := os.Getenv("LOG_LINE_PREFIX")
+
 	parser = &postgresql.Parser{}
-	parser.Init(&postgresql.Options{})
+	parser.Init(&postgresql.Options{LogLinePrefix: logLinePrefix})
 
 	common.AddUserAgentMetadata("rds", "postgresql")
 
