@@ -81,8 +81,8 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 			for _, field := range common.GetFilterFields() {
 				delete(fields, field)
 			}
-			// Sampling is done in the parser for greater efficiency
-			hnyEvent.SendPresampled()
+
+			hnyEvent.Send()
 		}
 		wg.Done()
 	}()

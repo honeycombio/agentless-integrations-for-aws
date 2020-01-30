@@ -28,7 +28,7 @@ var (
 )
 
 const (
-	version = "2.0.3"
+	version = "2.0.4"
 )
 
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
