@@ -165,7 +165,6 @@ Resources:
                   - !Ref KMSKeyId
   LambdaS3Policy:
     Type: "AWS::IAM::Policy"
-    Condition: EncryptionEnabled
     Properties:
       PolicyName: "lambda-s3-getobject"
       Roles:
