@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/honeycombio/agentless-integrations-for-aws/common"
@@ -12,6 +13,8 @@ import (
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 )
+
+var lambdaReportLineRegex = regexp.MustCompile(`^(START|END|REPORT) RequestId:.+`)
 
 type payload struct {
 	time       time.Time
@@ -68,6 +71,12 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 	}
 
 	for _, event := range data.LogEvents {
+		// Skip default lambda START, END, REPORT log lines to avoid "unable to parse"
+		// spam below, which can get expensive
+		match := lambdaReportLineRegex.FindString(event.Message)
+		if match != "" {
+			continue
+		}
 		parsedLine, err := parser.ParseLine(event.Message)
 		if err != nil {
 			logrus.WithError(err).WithField("line", event.Message).
