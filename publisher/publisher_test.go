@@ -31,3 +31,23 @@ func TestExtractPayload(t *testing.T) {
 		t.Error("unexpected value for time: ", payload.time)
 	}
 }
+
+func TestLambdaReportLineRegexp(t *testing.T) {
+	lines := []string{
+		"START RequestId: 2c2768b7-136f-4218-a4d9-07b7a4620051 Version: $LATEST\n",
+		"END RequestId: 525c23de-e7e1-4cbe-a3ee-78f43f45410b\n",
+		"REPORT RequestId: 2c2768b7-136f-4218-a4d9-07b7a4620051 Duration: 488.98 ms Billed Duration: 500 ms Memory Size: 3008 MB Max Memory Used: 84 MB Init Duration: 186.91 ms\n",
+	}
+
+	for _, line := range lines {
+		match := lambdaReportLineRegex.FindString(line)
+		if match == "" {
+			t.Error("expected match, line = ", line)
+		}
+	}
+
+	match := lambdaReportLineRegex.FindString(`{"a":"json", "line": true}`)
+	if match != "" {
+		t.Error("lambda report pattern should not match json")
+	}
+}
