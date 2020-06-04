@@ -81,9 +81,9 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 				delete(fields, field)
 			}
 			// Add CloudWatch event metadata
-			hnyEvent.AddField("cw_log_group", data.LogGroup)
-			hnyEvent.AddField("cw_log_stream", data.LogStream)
-			hnyEvent.AddField("cw_owner", data.Owner)
+			hnyEvent.AddField("aws.cloudwatch.group", data.LogGroup)
+			hnyEvent.AddField("aws.cloudwatch.stream", data.LogStream)
+			hnyEvent.AddField("aws.cloudwatch.owner", data.Owner)
 			// Sampling is done in the parser for greater efficiency
 			hnyEvent.SendPresampled()
 		}
