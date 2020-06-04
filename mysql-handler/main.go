@@ -80,6 +80,10 @@ func Handler(request events.CloudwatchLogsEvent) (Response, error) {
 			for _, field := range common.GetFilterFields() {
 				delete(fields, field)
 			}
+			// Add CloudWatch event metadata
+			hnyEvent.AddField("aws.cloudwatch.group", data.LogGroup)
+			hnyEvent.AddField("aws.cloudwatch.stream", data.LogStream)
+			hnyEvent.AddField("aws.cloudwatch.owner", data.Owner)
 			// Sampling is done in the parser for greater efficiency
 			hnyEvent.SendPresampled()
 		}
