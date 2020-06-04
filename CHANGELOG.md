@@ -1,5 +1,9 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.2.0 2020-06-04
+
+- Mysql and Postgres integration now include cloudwatch metdata [#32](https://github.com/honeycombio/agentless-integrations-for-aws/pull/32)
+
 ## 2.0.2 2019-11-15
 
 - Fixes an issue [with panics on invalid JSON
