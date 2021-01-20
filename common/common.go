@@ -10,12 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/sirupsen/logrus"
+
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/honeytail/parsers/htjson"
 	"github.com/honeycombio/honeytail/parsers/keyval"
 	"github.com/honeycombio/honeytail/parsers/regex"
 	libhoney "github.com/honeycombio/libhoney-go"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -189,4 +190,34 @@ func GetFilterFields() []string {
 	filterFields = strings.Split(filtersString, ",")
 
 	return filterFields
+}
+
+func LoggerFromEnv() *logrus.Logger {
+	l := logrus.New()
+
+	lvl := os.Getenv("LOG_LEVEL")
+	switch lvl {
+	case "debug":
+		l.SetLevel(logrus.DebugLevel)
+	case "info":
+		l.SetLevel(logrus.InfoLevel)
+	case "warn":
+		l.SetLevel(logrus.WarnLevel)
+	case "", "error": // DEFAULT
+		l.SetLevel(logrus.ErrorLevel)
+	default:
+		l.Fatalln("Unknown LOG_LEVEL: ", lvl)
+	}
+
+	lfmt := os.Getenv("LOG_FORMAT")
+	switch lfmt {
+	case "text":
+		l.SetFormatter(&logrus.TextFormatter{})
+	case "", "json": // DEFAULT
+		l.SetFormatter(&logrus.JSONFormatter{})
+	default:
+		l.Fatalln("Unknown LOG_FORMAT: ", lvl)
+	}
+
+	return l
 }

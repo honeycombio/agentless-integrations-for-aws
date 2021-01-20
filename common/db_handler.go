@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/aws/aws-lambda-go/events"
+	"github.com/sirupsen/logrus"
 
 	"github.com/honeycombio/honeytail/event"
 	"github.com/honeycombio/honeytail/parsers"
@@ -14,6 +15,8 @@ import (
 	"github.com/honeycombio/honeytail/parsers/postgresql"
 	libhoney "github.com/honeycombio/libhoney-go"
 )
+
+var defaultLogger = logrus.StandardLogger()
 
 // Response is a simple structured response
 type Response struct {
@@ -31,8 +34,10 @@ type DBHandler struct {
 	// the sample rate on events and call Send() vs SendPresampled().
 	presampledRate uint
 
+	// ScrubQuery can be set to true to sanitize
 	ScrubQuery bool
 	Env        string
+	Logger     logrus.FieldLogger
 }
 
 // NewMySQLHandler creates a DBHandler with presampledRate set correctly.
@@ -40,6 +45,7 @@ func NewMySQLHandler(parser *mysql.Parser) *DBHandler {
 	return &DBHandler{
 		parser:         parser,
 		presampledRate: uint(parser.SampleRate),
+		Logger:         defaultLogger,
 	}
 }
 
@@ -47,6 +53,7 @@ func NewMySQLHandler(parser *mysql.Parser) *DBHandler {
 func NewPostgreSQLHandler(parser *postgresql.Parser) *DBHandler {
 	return &DBHandler{
 		parser: parser,
+		Logger: defaultLogger,
 	}
 }
 
