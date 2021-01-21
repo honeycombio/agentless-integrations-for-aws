@@ -89,8 +89,8 @@ func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error)
 		close(lines)
 	}()
 
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		for e := range events {
 			hnyEvent := libhoney.NewEvent()
 			if h.ScrubQuery {
@@ -101,7 +101,12 @@ func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error)
 					e.Data["query"] = fmt.Sprintf("%x", newVal)
 				}
 			}
-			hnyEvent.Add(e.Data)
+			if err := hnyEvent.Add(e.Data); err != nil {
+				h.Logger.
+					WithError(err).
+					WithField("data", e.Data).
+					Errorln("failed to add event data")
+			}
 			hnyEvent.Timestamp = e.Timestamp
 			if h.Env != "" {
 				hnyEvent.AddField("env", h.Env)
@@ -118,9 +123,15 @@ func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error)
 			// MySQL sampling is done in the parser
 			if h.presampledRate > 0 {
 				hnyEvent.SampleRate = h.presampledRate
-				hnyEvent.SendPresampled()
+				err = hnyEvent.SendPresampled()
 			} else {
-				hnyEvent.Send()
+				err = hnyEvent.Send()
+			}
+			if err != nil {
+				h.Logger.
+					WithError(err).
+					WithField("event", e.Data).
+					Errorln("failed to send event")
 			}
 		}
 		wg.Done()
@@ -130,7 +141,6 @@ func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error)
 	close(events)
 
 	wg.Wait()
-
 	libhoney.Flush()
 
 	return Response{

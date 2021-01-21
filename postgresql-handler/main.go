@@ -16,15 +16,17 @@ func main() {
 
 	if err := common.InitHoneycombFromEnvVars(); err != nil {
 		logger.WithError(err).
-			Fatal("Unable to initialize libhoney with the supplied environment variables")
+			Fatalln("Unable to initialize libhoney with the supplied environment variables")
 	}
 	defer libhoney.Close()
 	common.AddUserAgentMetadata("rds", "postgresql")
 
 	parser := &postgresql.Parser{}
-	parser.Init(&postgresql.Options{
+	if err := parser.Init(&postgresql.Options{
 		LogLinePrefix: os.Getenv("LOG_LINE_PREFIX"),
-	})
+	}); err != nil {
+		logger.WithError(err).Fatalln("parser.Init failed")
+	}
 
 	dbh := common.NewPostgreSQLHandler(parser)
 	dbh.Env = os.Getenv("ENVIRONMENT")

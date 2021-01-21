@@ -98,14 +98,12 @@ func InitHoneycombFromEnvVars() error {
 	libhoney.UserAgentAddition = fmt.Sprintf("integrations-for-aws/%s", version)
 
 	// Call Init to configure libhoney
-	libhoney.Init(libhoney.Config{
+	return libhoney.Init(libhoney.Config{
 		WriteKey:   writeKey,
 		Dataset:    dataset,
 		APIHost:    apiHost,
 		SampleRate: sampleRate,
 	})
-
-	return nil
 }
 
 // ConstructParser accepts a parser name and attempts to build the parser,

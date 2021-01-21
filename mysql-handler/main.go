@@ -16,7 +16,7 @@ func main() {
 
 	if err := common.InitHoneycombFromEnvVars(); err != nil {
 		logger.WithError(err).
-			Fatal("Unable to initialize libhoney with the supplied environment variables")
+			Fatalln("Unable to initialize libhoney with the supplied environment variables")
 	}
 	defer libhoney.Close()
 	common.AddUserAgentMetadata("rds", "mysql")
@@ -24,7 +24,9 @@ func main() {
 	parser := &mysql.Parser{
 		SampleRate: int(common.GetSampleRate()),
 	}
-	parser.Init(&mysql.Options{})
+	if err := parser.Init(&mysql.Options{}); err != nil {
+		logger.WithError(err).Fatalln("parser.Init failed")
+	}
 
 	dbh := common.NewMySQLHandler(parser)
 	dbh.Env = os.Getenv("ENVIRONMENT")
