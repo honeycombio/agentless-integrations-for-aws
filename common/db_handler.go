@@ -24,6 +24,11 @@ type Response struct {
 	Message string `json:"message"`
 }
 
+type HoneyClient interface {
+	NewEvent() *libhoney.Event
+	Flush()
+}
+
 type DBHandler struct {
 	parser parsers.Parser
 
@@ -37,7 +42,10 @@ type DBHandler struct {
 	// ScrubQuery can be set to true to sanitize
 	ScrubQuery bool
 	Env        string
-	Logger     logrus.FieldLogger
+
+	// Dependencies
+	Logger      logrus.FieldLogger
+	HoneyClient *libhoney.Client
 }
 
 // NewMySQLHandler creates a DBHandler with presampledRate set correctly.
@@ -45,7 +53,6 @@ func NewMySQLHandler(parser *mysql.Parser) *DBHandler {
 	return &DBHandler{
 		parser:         parser,
 		presampledRate: uint(parser.SampleRate),
-		Logger:         defaultLogger,
 	}
 }
 
@@ -53,11 +60,23 @@ func NewMySQLHandler(parser *mysql.Parser) *DBHandler {
 func NewPostgreSQLHandler(parser *postgresql.Parser) *DBHandler {
 	return &DBHandler{
 		parser: parser,
-		Logger: defaultLogger,
 	}
 }
 
 func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error) {
+	if h.Logger == nil {
+		h.Logger = defaultLogger
+	}
+	if h.HoneyClient == nil {
+		var err error
+		h.HoneyClient, err = libhoney.NewClient(libhoney.ClientConfig{})
+		if err != nil {
+			return Response{
+				Ok:      false,
+				Message: "libhoney failed to initialize",
+			}, fmt.Errorf("libhoney failed to initialize")
+		}
+	}
 	if h.parser == nil {
 		return Response{
 			Ok:      false,
@@ -72,6 +91,9 @@ func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error)
 			Message: fmt.Sprintf("failed to parse cloudwatch event data: %s", err.Error()),
 		}, err
 	}
+	h.Logger.
+		WithField("len", len(data.LogEvents)).
+		Debug("parsed logEvents")
 
 	lines := make(chan string)
 	events := make(chan event.Event)
@@ -85,6 +107,10 @@ func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error)
 			for _, l := range messageLines {
 				lines <- l
 			}
+			h.Logger.
+				WithField("message", event.Message).
+				WithField("lines", len(messageLines)).
+				Debug("sent logEvents.Message")
 		}
 		close(lines)
 	}()
@@ -92,7 +118,8 @@ func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error)
 	wg.Add(1)
 	go func() {
 		for e := range events {
-			hnyEvent := libhoney.NewEvent()
+			h.Logger.WithFields(e.Data).Debug("honeytail Event received")
+			hnyEvent := h.HoneyClient.NewEvent()
 			if h.ScrubQuery {
 				if val, ok := e.Data["query"]; ok {
 					// generate a sha256 hash
@@ -141,7 +168,7 @@ func (h *DBHandler) Handle(request events.CloudwatchLogsEvent) (Response, error)
 	close(events)
 
 	wg.Wait()
-	libhoney.Flush()
+	h.HoneyClient.Flush()
 
 	return Response{
 		Ok:      true,

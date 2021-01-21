@@ -211,6 +211,9 @@ func LoggerFromEnv() *logrus.Logger {
 	switch lfmt {
 	case "text":
 		l.SetFormatter(&logrus.TextFormatter{})
+	case "colored":
+		f := &logrus.TextFormatter{ForceColors: true}
+		l.SetFormatter(f)
 	case "", "json": // DEFAULT
 		l.SetFormatter(&logrus.JSONFormatter{})
 	default:

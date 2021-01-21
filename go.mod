@@ -17,9 +17,11 @@ require (
 	github.com/honeycombio/mysqltools v0.0.1 // indirect
 	github.com/honeycombio/sqlparser v0.0.0-20180730202938-aab361df519b // indirect
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.4.0
 	github.com/stretchr/testify v1.2.2
 	github.com/xwb1989/sqlparser v0.0.0-20180606152119-120387863bf2 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
