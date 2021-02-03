@@ -72,7 +72,7 @@ Resources:
         Variables:
           ENVIRONMENT: !Ref Environment
           PARSER_TYPE: regex
-          REGEX_PATTERN: '(?P<bucket_owner>.+) (?P<bucket>.+) \[(?P<timestamp>.+)\] (?P<remote_ip>.+) (?P<requester>.+) (?P<request_id>.+) (?P<operation>.+) (?P<key>.+) "(?P<request_uri>.+)" (?P<http_status>.+) (?P<error_code>.+) (?P<bytes_sent>.+) (?P<object_size>.+) (?P<total_time>.+) (?P<turnaround_time>.+) "(?P<referrer>.+)" "(?P<user_agent>.+)" (?P<version_id>.+)'
+          REGEX_PATTERN: '(?P<bucket_owner>[^\s]+) (?P<bucket>[^\s]+) \[(?P<timestamp>.+?)\] (?P<remote_ip>[^\s]+) (?P<requester>[^\s]+) (?P<request_id>[^\s]+) (?P<operation>[^\s]+) (?P<key>[^\s]+) "(?P<request_uri>.+?)" (?P<http_status>[^\s]+) (?P<error_code>[^\s]+) (?P<bytes_sent>[^\s]+) (?P<object_size>[^\s]+) (?P<total_time>[^\s]+) (?P<turnaround_time>[^\s]+) "(?P<referrer>.+?)" "(?P<user_agent>.+?)" (?P<version_id>[^\s]+) (?P<host_id>[^\s]+) (?P<signature_version>[^\s]+) (?P<cipher_suite>[^\s]+) (?P<auth_type>[^\s]+) (?P<host_header>[^\s]+) (?P<tls_version>[^\s]+)'
           HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
           KMS_KEY_ID: !Ref KMSKeyId
           API_HOST: !Ref HoneycombAPIHost
