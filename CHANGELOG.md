@@ -1,5 +1,10 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.2.1 2021-02-09
+### Fixed
+- Update to the S3 bucket log regex to match new field names and improve resilience to future changes [#33](https://github.com/honeycombio/agentless-integrations-for-aws/pull/33) | [@NFarrington](https://github.com/NFarrington)
+- Fix KMS secret decryption [#34](https://github.com/honeycombio/agentless-integrations-for-aws/pull/34) | [@sbe-genomics](https://github.com/sbe-genomics)
+
 ## 2.2.0 2020-06-04
 
 - Mysql and Postgres integration now include cloudwatch metdata [#32](https://github.com/honeycombio/agentless-integrations-for-aws/pull/32)
