@@ -26,8 +26,8 @@ Parameters:
     Description: Sample rate. See https://honeycomb.io/docs/guides/sampling/.
   LogLinePrefix:
     Type: String
-    Default: '%t [%p-%l] %u@%d'
-    Description: The prefix of each log line. See https://www.postgresql.org/docs/current/runtime-config-logging.html#GUC-LOG-LINE-PREFIX
+    Default: '%t:%r:%u@%d:[%p]:t'
+    Description: The prefix of each log line. See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.Concepts.PostgreSQL.html#USER_LogAccess.Concepts.PostgreSQL.Log_Format
   LogGroupName:
     Type: String
     Description: The name of the AWS Cloudwatch Log Group to subscribe to
