@@ -147,6 +147,8 @@ After configuring RDS to write to Cloudwatch Logs, you can install the MySQL or 
 
 [Click here to install the PostgreSQL Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-rds-postgresql-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-rds-postgresql.yml)
 
+**Note:** PostgreSQL RDS Integration will not currently parse the details of queries involving quoted table or column names.
+
 ## How it works
 
 ### Cloudwatch
