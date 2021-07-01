@@ -1,4 +1,4 @@
-# github.com/aws/aws-lambda-go v1.9.0
+# github.com/aws/aws-lambda-go v1.24.0
 github.com/aws/aws-lambda-go/events
 github.com/aws/aws-lambda-go/lambda
 github.com/aws/aws-lambda-go/lambda/handlertrace
@@ -6,42 +6,42 @@ github.com/aws/aws-lambda-go/lambda/messages
 github.com/aws/aws-lambda-go/lambdacontext
 # github.com/aws/aws-sdk-go v1.18.1
 github.com/aws/aws-sdk-go/aws
-github.com/aws/aws-sdk-go/aws/session
-github.com/aws/aws-sdk-go/service/kms
-github.com/aws/aws-sdk-go/service/s3
 github.com/aws/aws-sdk-go/aws/awserr
-github.com/aws/aws-sdk-go/aws/credentials
-github.com/aws/aws-sdk-go/aws/endpoints
-github.com/aws/aws-sdk-go/internal/sdkio
+github.com/aws/aws-sdk-go/aws/awsutil
 github.com/aws/aws-sdk-go/aws/client
+github.com/aws/aws-sdk-go/aws/client/metadata
 github.com/aws/aws-sdk-go/aws/corehandlers
+github.com/aws/aws-sdk-go/aws/credentials
+github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
+github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
 github.com/aws/aws-sdk-go/aws/credentials/processcreds
 github.com/aws/aws-sdk-go/aws/credentials/stscreds
 github.com/aws/aws-sdk-go/aws/csm
 github.com/aws/aws-sdk-go/aws/defaults
+github.com/aws/aws-sdk-go/aws/ec2metadata
+github.com/aws/aws-sdk-go/aws/endpoints
 github.com/aws/aws-sdk-go/aws/request
-github.com/aws/aws-sdk-go/internal/ini
-github.com/aws/aws-sdk-go/internal/shareddefaults
-github.com/aws/aws-sdk-go/aws/awsutil
-github.com/aws/aws-sdk-go/aws/client/metadata
+github.com/aws/aws-sdk-go/aws/session
 github.com/aws/aws-sdk-go/aws/signer/v4
-github.com/aws/aws-sdk-go/private/protocol
-github.com/aws/aws-sdk-go/private/protocol/jsonrpc
+github.com/aws/aws-sdk-go/internal/ini
 github.com/aws/aws-sdk-go/internal/s3err
+github.com/aws/aws-sdk-go/internal/sdkio
+github.com/aws/aws-sdk-go/internal/sdkrand
+github.com/aws/aws-sdk-go/internal/sdkuri
+github.com/aws/aws-sdk-go/internal/shareddefaults
+github.com/aws/aws-sdk-go/private/protocol
 github.com/aws/aws-sdk-go/private/protocol/eventstream
 github.com/aws/aws-sdk-go/private/protocol/eventstream/eventstreamapi
+github.com/aws/aws-sdk-go/private/protocol/json/jsonutil
+github.com/aws/aws-sdk-go/private/protocol/jsonrpc
+github.com/aws/aws-sdk-go/private/protocol/query
+github.com/aws/aws-sdk-go/private/protocol/query/queryutil
 github.com/aws/aws-sdk-go/private/protocol/rest
 github.com/aws/aws-sdk-go/private/protocol/restxml
-github.com/aws/aws-sdk-go/internal/sdkrand
-github.com/aws/aws-sdk-go/service/sts
-github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
-github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
-github.com/aws/aws-sdk-go/aws/ec2metadata
-github.com/aws/aws-sdk-go/private/protocol/json/jsonutil
-github.com/aws/aws-sdk-go/private/protocol/query
 github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
-github.com/aws/aws-sdk-go/internal/sdkuri
-github.com/aws/aws-sdk-go/private/protocol/query/queryutil
+github.com/aws/aws-sdk-go/service/kms
+github.com/aws/aws-sdk-go/service/s3
+github.com/aws/aws-sdk-go/service/sts
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a
@@ -53,14 +53,14 @@ github.com/facebookgo/muster
 # github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
 # github.com/honeycombio/honeytail v1.0.0
+github.com/honeycombio/honeytail/event
 github.com/honeycombio/honeytail/httime
 github.com/honeycombio/honeytail/parsers
 github.com/honeycombio/honeytail/parsers/htjson
 github.com/honeycombio/honeytail/parsers/keyval
-github.com/honeycombio/honeytail/parsers/regex
-github.com/honeycombio/honeytail/event
 github.com/honeycombio/honeytail/parsers/mysql
 github.com/honeycombio/honeytail/parsers/postgresql
+github.com/honeycombio/honeytail/parsers/regex
 # github.com/honeycombio/libhoney-go v1.9.3
 github.com/honeycombio/libhoney-go
 github.com/honeycombio/libhoney-go/transmission
@@ -68,10 +68,10 @@ github.com/honeycombio/libhoney-go/transmission
 github.com/honeycombio/mysqltools/query/normalizer
 # github.com/honeycombio/sqlparser v0.0.0-20180730202938-aab361df519b
 github.com/honeycombio/sqlparser
-github.com/honeycombio/sqlparser/dependency/sqltypes
 github.com/honeycombio/sqlparser/dependency/bson
 github.com/honeycombio/sqlparser/dependency/bytes2
 github.com/honeycombio/sqlparser/dependency/hack
+github.com/honeycombio/sqlparser/dependency/sqltypes
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
 # github.com/konsorten/go-windows-terminal-sequences v1.0.1
@@ -82,7 +82,7 @@ github.com/kr/logfmt
 github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.4.0
 github.com/sirupsen/logrus
-# github.com/stretchr/testify v1.2.2
+# github.com/stretchr/testify v1.6.1
 github.com/stretchr/testify/assert
 # golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 golang.org/x/crypto/ssh/terminal
@@ -93,3 +93,5 @@ golang.org/x/sys/windows
 google.golang.org/appengine/cloudsql
 # gopkg.in/alexcesaro/statsd.v2 v2.0.0
 gopkg.in/alexcesaro/statsd.v2
+# gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
+gopkg.in/yaml.v3
