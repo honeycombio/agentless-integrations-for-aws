@@ -1,5 +1,9 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.2.2 2021-07-08
+
+- Update RDS PG log prefix to the only format allowed by RDS. [#37](https://github.com/honeycombio/agentless-integrations-for-aws/pull/33) | [@robbkidd](https://github.com/robbkidd)
+
 ## 2.2.1 2021-02-09
 ### Fixed
 - Update to the S3 bucket log regex to match new field names and improve resilience to future changes [#33](https://github.com/honeycombio/agentless-integrations-for-aws/pull/33) | [@NFarrington](https://github.com/NFarrington)
