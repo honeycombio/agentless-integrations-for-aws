@@ -67,10 +67,7 @@ jobs:
           aws-access-key-id: AWS_ACCESS_KEY_ID
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_REGION
-      - run:
-          command: ./publish_aws.sh
-          environment:
-            DRYRUN: true # remove this before merging
+      - run: ./publish_aws.sh
 
 # Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
 workflows:
@@ -88,7 +85,7 @@ workflows:
           requires:
             - go_test
       - publish_aws:
-          <<: *filters_always # change to filters_publish before merging
+          <<: *filters_publish
           context: Honeycomb Secrets for Public Repos
           requires:
             - validate_templates
