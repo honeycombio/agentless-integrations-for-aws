@@ -68,6 +68,17 @@ jobs:
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_REGION
       - run: ./publish_aws.sh
+  publish_github:
+    docker:
+      - image: cibuilds/github:0.13.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - run:
+          name: "Draft GitHub Release"
+          command: ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./pkg/ingest-handlers.zip
+
 
 # Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
 workflows:
@@ -90,4 +101,9 @@ workflows:
           requires:
             - validate_templates
             - build
-      # TODO add publish_github here?
+      - publish_github:
+          <<: *filters_publish
+          context: Honeycomb Secrets for Public Repos
+          requires:
+            - validate_templates
+            - build
