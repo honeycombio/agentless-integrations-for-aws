@@ -1,6 +1,25 @@
 # Use the latest 2.1 version of CircleCI pipeline processing engine, see https://circleci.com/docs/2.0/configuration-reference/
 version: 2.1
 
+# YAML Anchors to reduce copypasta
+
+# This is necessary for job to run when a tag is created
+filters_always: &filters_always
+  filters:
+    tags:
+      only: /.*/
+
+# Restrict running to only be on tags starting with vNNNN
+filters_publish: &filters_publish
+  filters:
+    tags:
+      only: /^v[0-9].*/
+    branches:
+      ignore: /.*/
+
+orbs:
+  aws-cli: circleci/aws-cli@2.0.3
+
 executors:
   go:
     parameters:
@@ -12,18 +31,79 @@ executors:
       - image: circleci/golang:1.<< parameters.goversion >>
 
 jobs:
-  run_tests:
+  go_test:
     executor: go
     steps:
       - checkout
-      # TODO also validate templates
       - run: go get -v -t -d ./...
       - run: go test -v ./...
+  validate_templates:
+    executor: go
+    steps:
+      - checkout
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_REGION
+      - run: ./test.sh
+  build:
+    executor: go
+    steps:
+      - checkout
+      - run: ./build.sh
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - pkg
+      - store_artifacts:
+          path: ./pkg
+  publish_aws:
+    executor: go
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_REGION
+      - run: ./publish_aws.sh
+  publish_github:
+    docker:
+      - image: cibuilds/github:0.13.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - run:
+          name: "Draft GitHub Release"
+          command: ghr -draft -n ${CIRCLE_TAG} -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${CIRCLE_TAG} ./pkg/ingest-handlers.zip
+
 
 # Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
 workflows:
   version: 2
-  run_tests:
+  build:
     jobs:
-      - run_tests
-      # TODO build and deploy here
+      - go_test:
+          <<: *filters_always
+      - validate_templates:
+          <<: *filters_always
+          # Testing templates requires AWS API access; no changes are made
+          context: Honeycomb Secrets for Public Repos
+      - build:
+          <<: *filters_always
+          requires:
+            - go_test
+      - publish_aws:
+          <<: *filters_publish
+          context: Honeycomb Secrets for Public Repos
+          requires:
+            - validate_templates
+            - build
+      - publish_github:
+          <<: *filters_publish
+          context: Honeycomb Secrets for Public Repos
+          requires:
+            - validate_templates
+            - build

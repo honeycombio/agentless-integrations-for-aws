@@ -25,10 +25,7 @@ var (
 	dataset      string
 	errorDataset string
 	filterFields []string
-)
-
-const (
-	version = "2.2.1"
+	version = "dev"
 )
 
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
