@@ -57,6 +57,20 @@ jobs:
             - pkg
       - store_artifacts:
           path: ./pkg
+  publish_aws:
+    executor: go
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - aws-cli/setup:
+          aws-access-key-id: AWS_ACCESS_KEY_ID
+          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          aws-region: AWS_REGION
+      - run:
+          command: ./publish_aws.sh
+          environment:
+            DRYRUN: true # remove this before merging
 
 # Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
 workflows:
@@ -73,4 +87,10 @@ workflows:
           <<: *filters_always
           requires:
             - go_test
-      # TODO add publish here
+      - publish_aws:
+          <<: *filters_always # change to filters_publish before merging
+          context: Honeycomb Secrets for Public Repos
+          requires:
+            - validate_templates
+            - build
+      # TODO add publish_github here?
