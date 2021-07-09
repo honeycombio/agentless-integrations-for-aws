@@ -46,6 +46,17 @@ jobs:
           aws-secret-access-key: AWS_SECRET_ACCESS_KEY
           aws-region: AWS_REGION
       - run: ./test.sh
+  build:
+    executor: go
+    steps:
+      - checkout
+      - run: ./build.sh
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - pkg
+      - store_artifacts:
+          path: ./pkg
 
 # Orchestrate or schedule a set of jobs, see https://circleci.com/docs/2.0/workflows/
 workflows:
@@ -58,4 +69,8 @@ workflows:
           <<: *filters_always
           # Testing templates requires AWS API access; no changes are made
           context: Honeycomb Secrets for Public Repos
-      # TODO build and deploy here
+      - build:
+          <<: *filters_always
+          requires:
+            - go_test
+      # TODO add publish here
