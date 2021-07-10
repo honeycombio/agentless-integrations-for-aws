@@ -58,22 +58,25 @@ func validateArguments(handler reflect.Type) (bool, error) {
 
 func validateReturns(handler reflect.Type) error {
 	errorType := reflect.TypeOf((*error)(nil)).Elem()
-	if handler.NumOut() > 2 {
+
+	switch n := handler.NumOut(); {
+	case n > 2:
 		return fmt.Errorf("handler may not return more than two values")
-	} else if handler.NumOut() > 1 {
+	case n > 1:
 		if !handler.Out(1).Implements(errorType) {
 			return fmt.Errorf("handler returns two values, but the second does not implement error")
 		}
-	} else if handler.NumOut() == 1 {
+	case n == 1:
 		if !handler.Out(0).Implements(errorType) {
 			return fmt.Errorf("handler returns a single value, but it does not implement error")
 		}
 	}
+
 	return nil
 }
 
 // NewHandler creates a base lambda handler from the given handler function. The
-// returned Handler performs JSON deserialization and deserialization, and
+// returned Handler performs JSON serialization and deserialization, and
 // delegates to the input handler function.  The handler function parameter must
 // satisfy the rules documented by Start.  If handlerFunc is not a valid
 // handler, the returned Handler simply reports the validation error.
