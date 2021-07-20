@@ -2,7 +2,7 @@
 
 ## 2.2.2 2021-07-08
 
-- Update RDS PG log prefix to the only format allowed by RDS. [#37](https://github.com/honeycombio/agentless-integrations-for-aws/pull/33) | [@robbkidd](https://github.com/robbkidd)
+- Update RDS PG log prefix to the only format allowed by RDS. [#37](https://github.com/honeycombio/agentless-integrations-for-aws/pull/37) | [@robbkidd](https://github.com/robbkidd)
 
 ## 2.2.1 2021-02-09
 ### Fixed
