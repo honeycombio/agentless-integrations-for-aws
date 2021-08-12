@@ -1,5 +1,7 @@
 # Honeycomb Agentless Integrations for AWS
 
+[![OSS Lifecycle](https://img.shields.io/osslifecycle/honeycombio/agentless-integrations-for-aws)](https://github.com/honeycombio/home/blob/main/honeycomb-oss-lifecycle-and-practices.md)
+
 AWS Agentless integration to send data to [Honeycomb](https://www.honeycomb.io), a service for debugging your software in production.
 
 This is a collection of AWS Lambda-based integrations packaged in AWS Cloudformation, designed to help you get data from AWS services without the need to run a server-based agent. We currently accept Cloudwatch Logs and S3.
