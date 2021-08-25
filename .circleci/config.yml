@@ -88,7 +88,13 @@ workflows:
       - go_test:
           <<: *filters_always
       - validate_templates:
-          <<: *filters_always
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore:
+                - /pull\/.*/
+                - /dependabot\/.*/
           # Testing templates requires AWS API access; no changes are made
           context: Honeycomb Secrets for Public Repos
       - build:
