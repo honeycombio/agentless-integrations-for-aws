@@ -4,7 +4,7 @@ go 1.11
 
 require (
 	github.com/aws/aws-lambda-go v1.26.0
-	github.com/aws/aws-sdk-go v1.18.1
+	github.com/aws/aws-sdk-go v1.40.31
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
 	github.com/facebookgo/limitgroup v0.0.0-20150612190941-6abd8d71ec01 // indirect
