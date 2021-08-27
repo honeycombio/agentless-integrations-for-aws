@@ -4,7 +4,7 @@ go 1.11
 
 require (
 	github.com/aws/aws-lambda-go v1.26.0
-	github.com/aws/aws-sdk-go v1.18.1
+	github.com/aws/aws-sdk-go v1.40.32
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/honeycombio/honeytail v1.0.0
 	github.com/honeycombio/libhoney-go v1.15.4
