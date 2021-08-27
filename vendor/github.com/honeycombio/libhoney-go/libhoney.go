@@ -33,7 +33,7 @@ const (
 	defaultSampleRate = 1
 	defaultAPIHost    = "https://api.honeycomb.io/"
 	defaultDataset    = "libhoney-go dataset"
-	version           = "1.9.3"
+	version           = "1.15.4"
 
 	// DefaultMaxBatchSize how many events to collect in a batch
 	DefaultMaxBatchSize = 50
@@ -64,7 +64,7 @@ var (
 )
 
 // default is a mute statsd; intended to be overridden
-var sd, _ = statsd.New(statsd.Mute(true))
+var sd, _ = statsd.New(statsd.Mute(true), statsd.Prefix("libhoney"))
 
 // UserAgentAddition is a variable set at compile time via -ldflags to allow you
 // to augment the "User-Agent" header that libhoney sends along with each event.
@@ -83,7 +83,8 @@ type Config struct {
 	APIKey string
 
 	// WriteKey is the deprecated name for the Honeycomb authentication token.
-	// Use APIKey instead. If both are set, APIKey takes precedence.
+	//
+	// Deprecated: Use APIKey instead. If both are set, APIKey takes precedence.
 	WriteKey string
 
 	// Dataset is the name of the Honeycomb dataset to which to send these events.
@@ -114,7 +115,9 @@ type Config struct {
 	BlockOnResponse bool
 
 	// Output is the deprecated method of manipulating how libhoney sends
-	// events. Please use Transmission instead.
+	// events.
+	//
+	// Deprecated: Please use Transmission instead.
 	Output Output
 
 	// Transmission allows you to override what happens to events after you call
@@ -132,7 +135,7 @@ type Config struct {
 	MaxConcurrentBatches uint          // how many batches can be inflight simultaneously. Overrides DefaultMaxConcurrentBatches.
 	PendingWorkCapacity  uint          // how many events to allow to pile up. Overrides DefaultPendingWorkCapacity
 
-	// Transport is deprecated and should not be used. To set the HTTP Transport
+	// Deprecated: Transport is deprecated and should not be used. To set the HTTP Transport
 	// set the Transport elements on the Transmission Sender instead.
 	Transport http.RoundTripper
 
@@ -223,9 +226,10 @@ func Init(conf Config) error {
 	return err
 }
 
-// Output is deprecated; use Transmission instead. OUtput was responsible for
-// handling events after Send() is called. Implementations of Add() must be safe
-// for concurrent calls.
+// Output was responsible for handling events after Send() is called. Implementations
+// of Add() must be safe for concurrent calls.
+//
+// Deprecated: Output is deprecated; use Transmission instead.
 type Output interface {
 	Add(ev *Event)
 	Start() error
@@ -254,6 +258,13 @@ func (to *transitionOutput) Add(ev *transmission.Event) {
 	to.Output.Add(origEvent)
 }
 
+func (to *transitionOutput) Flush() error {
+	if err := to.Stop(); err != nil {
+		return err
+	}
+	return to.Stop()
+}
+
 func (to *transitionOutput) TxResponses() chan transmission.Response {
 	return to.responses
 }
@@ -270,8 +281,9 @@ func (to *transitionOutput) SendResponse(r transmission.Response) bool {
 	return false
 }
 
-// VerifyWriteKey is the deprecated call to validate a Honeycomb API key. Please
-// use VerifyAPIKey instead.
+// VerifyWriteKey is the deprecated call to validate a Honeycomb API key.
+//
+// Deprecated: Please use VerifyAPIKey instead.
 func VerifyWriteKey(config Config) (team string, err error) {
 	return VerifyAPIKey(config)
 }
@@ -284,7 +296,7 @@ func VerifyAPIKey(config Config) (team string, err error) {
 	defer func() { dc.logger.Printf("verify write key got back %s with err=%s", team, err) }()
 	if config.APIKey == "" {
 		if config.WriteKey == "" {
-			return team, errors.New("config.APIKey and config.WriteKey are both empty; can't verify empty ke")
+			return team, errors.New("config.APIKey and config.WriteKey are both empty; can't verify empty key")
 		}
 		config.APIKey = config.WriteKey
 	}
@@ -324,7 +336,7 @@ Response body: %s`, resp.StatusCode, string(body))
 	return ret["team_slug"], nil
 }
 
-// Response is deprecated; please use transmission.Response instead.
+// Deprecated: Response is deprecated; please use transmission.Response instead.
 type Response struct {
 	transmission.Response
 }
@@ -467,13 +479,14 @@ func Flush() {
 	dc.Flush()
 }
 
-// SendNow is deprecated and may be removed in a future major release.
 // Contrary to its name, SendNow does not block and send data
 // immediately, but only enqueues to be sent asynchronously.
 // It is equivalent to:
 //   ev := libhoney.NewEvent()
 //   ev.Add(data)
 //   ev.Send()
+//
+// Deprecated: SendNow is deprecated and may be removed in a future major release.
 func SendNow(data interface{}) error {
 	dc.ensureLogger()
 	ev := NewEvent()
@@ -486,7 +499,9 @@ func SendNow(data interface{}) error {
 }
 
 // Responses returns the channel from which the caller can read the responses
-// to sent events. Responses is deprecated; please use TxResponses instead.
+// to sent events.
+//
+// Deprecated: Responses is deprecated; please use TxResponses instead.
 func Responses() chan Response {
 	oneResp.Do(func() {
 		if transitionResponses == nil {
@@ -659,6 +674,11 @@ func (f *fieldHolder) Fields() map[string]interface{} {
 	return f.data
 }
 
+// returns a human friendly string representation of the fieldHolder
+func (f *fieldHolder) String() string {
+	return fmt.Sprint(f.data)
+}
+
 // mask the add functions on an event so that we can test the sent lock and noop
 // if the event has been sent.
 
@@ -723,6 +743,9 @@ func (e *Event) AddFunc(fn func() (string, interface{}, error)) error {
 // Once you Send an event, any addition calls to add data to that event will
 // return without doing anything. Once the event is sent, it becomes immutable.
 func (e *Event) Send() error {
+	if e.client == nil {
+		e.client = &Client{}
+	}
 	e.client.ensureLogger()
 	if shouldDrop(e.SampleRate) {
 		e.client.logger.Printf("dropping event due to sampling")
@@ -759,27 +782,39 @@ func (e *Event) SendPresampled() (err error) {
 			e.client.logger.Printf("Send enqueued event: %+v", e)
 		}
 	}()
-	e.lock.RLock()
-	defer e.lock.RUnlock()
+
+	// Lock the sent bool before taking the event lock, to match the order in
+	// the Add methods.
+	e.sendLock.Lock()
+	defer e.sendLock.Unlock()
+
+	e.fieldHolder.lock.RLock()
+	defer e.fieldHolder.lock.RUnlock()
 	if len(e.data) == 0 {
 		return errors.New("No metrics added to event. Won't send empty event.")
 	}
-	// Consider making these restrictions optional; for non-Honeycomb based
-	// Sender implementations (eg STDOUT) it's totally possible to send events
-	// without an API key etc.
-	if e.APIHost == "" {
-		return errors.New("No APIHost for Honeycomb. Can't send to the Great Unknown.")
-	}
-	if e.WriteKey == "" {
-		return errors.New("No WriteKey specified. Can't send event.")
+
+	// if client.transmission is transmission.Honeycomb or a pointer to same,
+	// then we should verify that APIHost and WriteKey are set. For
+	// non-Honeycomb based Sender implementations (eg STDOUT) it's totally
+	// possible to send events without an API key etc
+
+	senderType := reflect.TypeOf(e.client.transmission).String()
+	isHoneycombSender := strings.HasSuffix(senderType, "transmission.Honeycomb")
+	isMockSender := strings.HasSuffix(senderType, "transmission.MockSender")
+	if isHoneycombSender || isMockSender {
+		if e.APIHost == "" {
+			return errors.New("No APIHost for Honeycomb. Can't send to the Great Unknown.")
+		}
+		if e.WriteKey == "" {
+			return errors.New("No WriteKey specified. Can't send event.")
+		}
 	}
 	if e.Dataset == "" {
 		return errors.New("No Dataset for Honeycomb. Can't send datasetless.")
 	}
 
-	// lock the sent bool and then mark the event as sent. No more changes!
-	e.sendLock.Lock()
-	defer e.sendLock.Unlock()
+	// Mark the event as sent, no more field changes will be applied.
 	e.sent = true
 
 	e.client.ensureTransmission()
@@ -794,6 +829,16 @@ func (e *Event) SendPresampled() (err error) {
 	}
 	e.client.transmission.Add(txEvent)
 	return nil
+}
+
+// returns a human friendly string representation of the event
+func (e *Event) String() string {
+	masked := e.WriteKey
+	if e.WriteKey != "" && len(e.WriteKey) > 4 {
+		len := len(e.WriteKey) - 4
+		masked = strings.Repeat("X", len) + e.WriteKey[len:]
+	}
+	return fmt.Sprintf("{WriteKey:%s Dataset:%s SampleRate:%d APIHost:%s Timestamp:%v fieldHolder:%+v sent:%t}", masked, e.Dataset, e.SampleRate, e.APIHost, e.Timestamp, e.fieldHolder.String(), e.sent)
 }
 
 // returns true if the sample should be dropped
@@ -818,13 +863,14 @@ func (b *Builder) AddDynamicField(name string, fn func() interface{}) error {
 	return nil
 }
 
-// SendNow is deprecated and may be removed in a future major release.
 // Contrary to its name, SendNow does not block and send data
 // immediately, but only enqueues to be sent asynchronously.
 // It is equivalent to:
 //   ev := builder.NewEvent()
 //   ev.Add(data)
 //   ev.Send()
+//
+// Deprecated: SendNow is deprecated and may be removed in a future major release.
 func (b *Builder) SendNow(data interface{}) error {
 	ev := b.NewEvent()
 	if err := ev.Add(data); err != nil {
@@ -869,7 +915,6 @@ func (b *Builder) Clone() *Builder {
 		Dataset:    b.Dataset,
 		SampleRate: b.SampleRate,
 		APIHost:    b.APIHost,
-		dynFields:  make([]dynamicField, 0, len(b.dynFields)),
 		client:     b.client,
 	}
 	newB.data = make(map[string]interface{})
@@ -881,9 +926,8 @@ func (b *Builder) Clone() *Builder {
 	// copy dynamic metric generators
 	b.dynFieldsLock.RLock()
 	defer b.dynFieldsLock.RUnlock()
-	for _, dynFd := range b.dynFields {
-		newB.dynFields = append(newB.dynFields, dynFd)
-	}
+	newB.dynFields = make([]dynamicField, len(b.dynFields))
+	copy(newB.dynFields, b.dynFields)
 	return newB
 }
 
