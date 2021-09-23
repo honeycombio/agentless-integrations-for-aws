@@ -25,10 +25,10 @@ executors:
     parameters:
       goversion:
         type: string
-        default: "12"
-    working_directory: /go/src/github.com/honeycombio/agentless-integrations-for-aws
+        default: "17"
+    working_directory: /home/circleci/go/src/github.com/honeycombio/agentless-integrations-for-aws
     docker:
-      - image: circleci/golang:1.<< parameters.goversion >>
+      - image: cimg/go:1.<< parameters.goversion >>
 
 jobs:
   go_test:
