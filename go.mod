@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.40.34
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/honeycombio/honeytail v1.0.0
-	github.com/honeycombio/libhoney-go v1.15.4
+	github.com/honeycombio/libhoney-go v1.15.5
 	github.com/honeycombio/mysqltools v0.0.1 // indirect
 	github.com/honeycombio/sqlparser v0.0.0-20180730202938-aab361df519b // indirect
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
