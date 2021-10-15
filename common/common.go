@@ -70,7 +70,7 @@ func InitHoneycombFromEnvVars() error {
 				logrus.WithError(err).Error("unable to decrypt honeycomb write key")
 				return fmt.Errorf("unable to decrypt honeycomb write key")
 			}
-			writeKey = base64.StdEncoding.EncodeToString(resp.Plaintext)
+			writeKey = string(resp.Plaintext)
 		}
 	} else {
 		writeKey = os.Getenv("HONEYCOMB_WRITE_KEY")
