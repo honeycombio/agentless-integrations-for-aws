@@ -1,5 +1,29 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.2.3 2021-10-18
+
+### Fixes
+
+- Revert "fix kms secret decryption" (#68) | [@JamieDanielson](https://github.com/JamieDanielson)
+
+### Maintenance
+
+- docs: add local testing docs (#69) | [@vreynolds](https://github.com/vreynolds)
+- Change maintenance badge to maintained (#63) | [@JamieDanielson](https://github.com/JamieDanielson)
+- Add Stalebot (#64) | [@JamieDanielson](https://github.com/JamieDanielson)
+- maint: use latest go version in CI (#62) | [@vreynolds](https://github.com/vreynolds)
+- Add NOTICE (#61) | [@cartermp](https://github.com/cartermp)
+- Allow dependabot and forked PRs to run in CI (#56) | [@vreynolds](https://github.com/vreynolds)
+- Add issue and PR templates (#55) | [@vreynolds](https://github.com/vreynolds)
+- Add OSS lifecycle badge (#54) | [@vreynolds](https://github.com/vreynolds)
+- Add community health files (#53) | [@vreynolds](https://github.com/vreynolds)
+- correct the URL for the PR referenced (#50) | [@robbkidd](https://github.com/robbkidd)
+- Bump github.com/aws/aws-sdk-go from 1.40.32 to 1.40.34 (#60)
+- Bump github.com/sirupsen/logrus from 1.4.0 to 1.8.1 (#42)
+- Bump github.com/aws/aws-sdk-go from 1.18.1 to 1.40.32 (#59)
+- Bump github.com/honeycombio/libhoney-go from 1.9.3 to 1.15.4 (#58)
+- Bump github.com/aws/aws-lambda-go from 1.9.0 to 1.26.0 (#52)
+
 ## 2.2.2 2021-07-08
 
 - Update RDS PG log prefix to the only format allowed by RDS. [#37](https://github.com/honeycombio/agentless-integrations-for-aws/pull/37) | [@robbkidd](https://github.com/robbkidd)
