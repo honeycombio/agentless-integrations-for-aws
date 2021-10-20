@@ -65,8 +65,6 @@ github.com/facebookgo/limitgroup
 github.com/facebookgo/muster
 # github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
-# github.com/golang/snappy v0.0.3
-github.com/golang/snappy
 # github.com/honeycombio/honeytail v1.0.0
 github.com/honeycombio/honeytail/event
 github.com/honeycombio/honeytail/httime
@@ -76,7 +74,7 @@ github.com/honeycombio/honeytail/parsers/keyval
 github.com/honeycombio/honeytail/parsers/mysql
 github.com/honeycombio/honeytail/parsers/postgresql
 github.com/honeycombio/honeytail/parsers/regex
-# github.com/honeycombio/libhoney-go v1.15.4
+# github.com/honeycombio/libhoney-go v1.15.5
 github.com/honeycombio/libhoney-go
 github.com/honeycombio/libhoney-go/transmission
 # github.com/honeycombio/mysqltools v0.0.1
@@ -89,9 +87,11 @@ github.com/honeycombio/sqlparser/dependency/hack
 github.com/honeycombio/sqlparser/dependency/sqltypes
 # github.com/jmespath/go-jmespath v0.4.0
 github.com/jmespath/go-jmespath
-# github.com/klauspost/compress v1.12.3
+# github.com/klauspost/compress v1.13.5
+github.com/klauspost/compress
 github.com/klauspost/compress/fse
 github.com/klauspost/compress/huff0
+github.com/klauspost/compress/internal/snapref
 github.com/klauspost/compress/zstd
 github.com/klauspost/compress/zstd/internal/xxhash
 # github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515
@@ -102,7 +102,7 @@ github.com/pmezard/go-difflib/difflib
 github.com/sirupsen/logrus
 # github.com/stretchr/testify v1.6.1
 github.com/stretchr/testify/assert
-# github.com/vmihailenco/msgpack/v5 v5.2.0
+# github.com/vmihailenco/msgpack/v5 v5.3.4
 github.com/vmihailenco/msgpack/v5
 github.com/vmihailenco/msgpack/v5/msgpcode
 # github.com/vmihailenco/tagparser/v2 v2.0.0
