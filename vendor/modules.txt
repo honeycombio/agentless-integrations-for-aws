@@ -63,9 +63,9 @@ github.com/facebookgo/clock
 github.com/facebookgo/limitgroup
 # github.com/facebookgo/muster v0.0.0-20150708232844-fd3d7953fd52
 github.com/facebookgo/muster
-# github.com/go-sql-driver/mysql v1.4.1
+# github.com/go-sql-driver/mysql v1.6.0
 github.com/go-sql-driver/mysql
-# github.com/honeycombio/honeytail v1.0.0
+# github.com/honeycombio/honeytail v1.5.0
 github.com/honeycombio/honeytail/event
 github.com/honeycombio/honeytail/httime
 github.com/honeycombio/honeytail/parsers
@@ -100,7 +100,7 @@ github.com/kr/logfmt
 github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.8.1
 github.com/sirupsen/logrus
-# github.com/stretchr/testify v1.6.1
+# github.com/stretchr/testify v1.7.0
 github.com/stretchr/testify/assert
 # github.com/vmihailenco/msgpack/v5 v5.3.4
 github.com/vmihailenco/msgpack/v5
@@ -113,8 +113,6 @@ github.com/vmihailenco/tagparser/v2/internal/parser
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
-# google.golang.org/appengine v1.6.5
-google.golang.org/appengine/cloudsql
 # gopkg.in/alexcesaro/statsd.v2 v2.0.0
 gopkg.in/alexcesaro/statsd.v2
 # gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
