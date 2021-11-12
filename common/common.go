@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/honeycombio/honeytail/parsers/keyval"
 	"github.com/honeycombio/honeytail/parsers/regex"
 	libhoney "github.com/honeycombio/libhoney-go"
+	"github.com/honeycombio/libhoney-go/transmission"
 	"github.com/sirupsen/logrus"
 )
 
@@ -25,7 +27,7 @@ var (
 	dataset      string
 	errorDataset string
 	filterFields []string
-	version = "dev"
+	version      = "dev"
 )
 
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
@@ -100,6 +102,11 @@ func InitHoneycombFromEnvVars() error {
 		APIHost:    apiHost,
 		SampleRate: sampleRate,
 	})
+
+	debug := envOrElseBool("HONEYCOMB_DEBUG", false)
+	if debug {
+		go readResponses(libhoney.TxResponses())
+	}
 
 	return nil
 }
@@ -186,4 +193,36 @@ func GetFilterFields() []string {
 	filterFields = strings.Split(filtersString, ",")
 
 	return filterFields
+}
+
+func envOrElseBool(key string, fallback bool) bool {
+	if value, ok := os.LookupEnv(key); ok {
+		v, err := strconv.ParseBool(value)
+		if err != nil {
+			return fallback
+		}
+		return v
+	}
+	return fallback
+}
+
+func readResponses(responses chan transmission.Response) {
+	for r := range responses {
+		var metadata string
+		if r.Metadata != nil {
+			metadata = fmt.Sprintf("%s", r.Metadata)
+		}
+		if r.StatusCode >= 200 && r.StatusCode < 300 {
+			message := "Successfully sent event to Honeycomb"
+			if metadata != "" {
+				message += fmt.Sprintf(": %s", metadata)
+			}
+			logrus.Debugf("%s", message)
+		} else if r.StatusCode == http.StatusUnauthorized {
+			logrus.Errorf("Error sending event to honeycomb! The APIKey was rejected, please verify your APIKey. %s", metadata)
+		} else {
+			logrus.Errorf("Error sending event to Honeycomb! %s had code %d, err %v and response body %s",
+				metadata, r.StatusCode, r.Err, r.Body)
+		}
+	}
 }
