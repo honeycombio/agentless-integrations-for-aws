@@ -207,10 +207,16 @@ $ aws kms create-key --description "used to encrypt secrets"
 $ aws kms create-alias --alias-name alias/secrets_key --target-key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc
 ```
 
+Save a file containing only your Honeycomb API Key to be passed into the encryption step. For example, if abc123 is your Honeycomb API Key and my-key is the name of the file, create the file like this:
+
+```shell
+echo -n abc123 > my-key
+```
+
 Now you're ready to encrypt your Honeycomb write key:
 
 ```
-$ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext "thisismyhoneycombkey"
+$ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext fileb://my-key
 {
     "CiphertextBlob": "AQICAHge4+BhZ1sURk1UGUjTZxmcegPXyRqG8NCK8/schk381gGToGRb8n3PCjITQPDKjxuJAAAAcjBwBgkqhkiG9w0BBwagYzBhAgEAMFwGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM0GLK36ChLOlHQiiiAgEQgC9lYlR3qvsQEhgILHhT0eD4atgdB7UAMW6TIAJw9vYsPpnbHhqhO7V8/mEa9Iej+g==",
     "KeyId": "arn:aws:kms:us-east-1:702835727665:key/a38f80cc-19b5-486a-a163-a4502b7a52cc"
