@@ -219,9 +219,9 @@ $ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext "thi
 
 Record the `CiphertextBlob` and the last part of the Key ID (example: `a38f80cc-19b5-486a-a163-a4502b7a52cc`) - this is what you'll pass to the Cloudformation templates.
 
-# Advanced Installation Steps
+## Advanced Installation Steps
 
-## Terraform
+### Terraform
 
 See the [`terraform`](terraform) directory in this repo for examples of Terraform configs.
 
@@ -314,3 +314,8 @@ If successful, you should see an output like this:
     "StackId": "arn:aws:cloudformation:us-east-1:12345678910:stack/my-stack-name/19b46840-4348-11e8-9090-500c28b4e461"
 }
 ```
+
+## Debugging
+
+If you don't see events in Honeycomb, there may be errors returned from the Honeycomb API. To see API responses, you can enable debugging
+ by adding the following environment variable to the lambda function created by the stack: `HONEYCOMB_DEBUG=true`
