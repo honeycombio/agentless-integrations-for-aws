@@ -78,7 +78,7 @@ Enable events __Put__ and __Complete Multipart Upload__ and select the lambda be
 
 ### Honeycomb Publisher for Lambda
 
-The Honeycomb Publisher for Lambda receives and publishes Honeycomb events on behalf of other Honeycomb-instrumented Lambda functions. It allows events to be sent asynchronously, rather 
+The Honeycomb Publisher for Lambda receives and publishes Honeycomb events on behalf of other Honeycomb-instrumented Lambda functions. It allows events to be sent asynchronously, rather
 than blocking the upstream function. The source function is modified so that its instrumentation goes to STDOUT. Lambda writes this output to a Cloudwatch Log Group, and the publisher subscribes to one or more Cloudwatch Log Groups and sends the instrumentation on to Honeycomb.
 
 A sample event looks like this. Fields are stored in the `data` map, the event timestamp comes from the `time` field, and the target dataset is specified in `dataset`. If `dataset` is missing, events go to a fallback dataset.
@@ -129,7 +129,7 @@ After this is installed, you will need to manually configure your ELB log bucket
 
 Used to parse ALB logs, which are saved to S3 periodically by the ALB service. You can use the __MatchPatterns__ and __FilterPatterns__ parameters to selectively target specific ALBs.
 
-[Click here to install the AWS EAB Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-alb-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/aws-alb-logs.yml)
+[Click here to install the AWS ALB Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-alb-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/aws-alb-logs.yml)
 
 After this is installed, you will need to manually configure your ALB log bucket to send events to the lambda function. See instructions above for __Sending S3 events to Lambda__.
 
@@ -232,7 +232,7 @@ Record the `CiphertextBlob` and the last part of the Key ID (example: `a38f80cc-
 See the [`terraform`](terraform) directory in this repo for examples of Terraform configs.
 
 If you want to get up and running with configurable production-ready modules, see the modules published by the [`terra-farm`](https://github.com/terra-farm) community
-on the Terraform Registry: 
+on the Terraform Registry:
 
 https://registry.terraform.io/modules/terra-farm/honeycomb/aws/
 
