@@ -14,6 +14,9 @@
 - empower apply-labels action to apply labels (#74)
 - Bump github.com/aws/aws-sdk-go from 1.40.34 to 1.41.7 (#72)
 - Bump github.com/honeycombio/libhoney-go from 1.15.4 to 1.15.5 (#65)
+- Bump github.com/aws/aws-lambda-go from 1.26.0 to 1.27.0 (#66)
+- Bump github.com/aws/aws-sdk-go from 1.41.7 to 1.42.9 (#87)
+- Bump github.com/honeycombio/honeytail from 1.0.0 to 1.6.0 (#77)
 
 ## 2.2.3 2021-10-18
 
