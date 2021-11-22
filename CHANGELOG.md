@@ -1,6 +1,6 @@
 # agentless-integrations-for-aws Changelog
 
-## 2.3.0 2021-11-19
+## 2.3.0 2021-11-22
 
 ### Features
 
