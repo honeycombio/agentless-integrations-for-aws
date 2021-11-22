@@ -1,5 +1,23 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.3.0 2021-11-22
+
+### Features
+
+- add debug mode for reading API responses (#80) | [@vreynolds](https://github.com/vreynolds)
+
+### Maintenance
+
+- docs: fix alb link (#85)
+- docs: update key encryption (#81)
+- remove vendor directory (#78)
+- empower apply-labels action to apply labels (#74)
+- Bump github.com/aws/aws-sdk-go from 1.40.34 to 1.41.7 (#72)
+- Bump github.com/honeycombio/libhoney-go from 1.15.4 to 1.15.5 (#65)
+- Bump github.com/aws/aws-lambda-go from 1.26.0 to 1.27.0 (#66)
+- Bump github.com/aws/aws-sdk-go from 1.41.7 to 1.42.9 (#87)
+- Bump github.com/honeycombio/honeytail from 1.0.0 to 1.6.0 (#77)
+
 ## 2.2.3 2021-10-18
 
 ### Fixes
@@ -29,7 +47,9 @@
 - Update RDS PG log prefix to the only format allowed by RDS. [#37](https://github.com/honeycombio/agentless-integrations-for-aws/pull/37) | [@robbkidd](https://github.com/robbkidd)
 
 ## 2.2.1 2021-02-09
+
 ### Fixed
+
 - Update to the S3 bucket log regex to match new field names and improve resilience to future changes [#33](https://github.com/honeycombio/agentless-integrations-for-aws/pull/33) | [@NFarrington](https://github.com/NFarrington)
 - Fix KMS secret decryption [#34](https://github.com/honeycombio/agentless-integrations-for-aws/pull/34) | [@sbe-genomics](https://github.com/sbe-genomics)
 
