@@ -93,6 +93,7 @@ Resources:
           MATCH_PATTERNS: !Ref MatchPatterns
           FILTER_PATTERNS: !Ref FilterPatterns
           FILTER_FIELDS: !Ref FilterFields
+          FORCE_GUNZIP: true
       FunctionName:
         "Fn::Join":
           - '-'
