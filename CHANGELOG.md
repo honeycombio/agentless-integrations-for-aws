@@ -1,5 +1,19 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.3.1 2022-02-02
+
+### Fixes
+
+- fix: alb logs are not parsed (#97) | [@vreynolds](https://github.com/vreynolds)
+
+### Maintenance
+
+- gh: add re-triage workflow (#90) | [@vreynolds](https://github.com/vreynolds)
+- docs: add a note about debugging (#82) | [@vreynolds](https://github.com/vreynolds)
+- Bump github.com/aws/aws-sdk-go from 1.42.16 to 1.42.34 (#93)
+- Bump github.com/aws/aws-lambda-go from 1.27.0 to 1.27.1 (#91)
+- Bump github.com/aws/aws-sdk-go from 1.42.9 to 1.42.16 (#88)
+
 ## 2.3.0 2021-11-22
 
 ### Features
