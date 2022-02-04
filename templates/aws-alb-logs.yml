@@ -43,6 +43,10 @@ Parameters:
     Type: Number
     Default: 192
     Description: Memory allocated to the Lambda function. Must be >= 128 and a multiple of 64. Increases this also increases CPU proportionally.
+  RenameFields:
+    type: String
+    Description: Comma-separated list of k=v pairs to rename fields.
+    Default: ''
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -63,6 +67,7 @@ Metadata:
           - Environment
           - KMSKeyId
           - HoneycombAPIHost
+          - RenameFields
 Conditions:
   EncryptionEnabled: !Not [!Equals [!Ref KMSKeyId, '']]
 Resources:
@@ -94,6 +99,7 @@ Resources:
           FILTER_PATTERNS: !Ref FilterPatterns
           FILTER_FIELDS: !Ref FilterFields
           FORCE_GUNZIP: true
+          RENAME_FIELDS: !Ref RenameFields
       FunctionName:
         "Fn::Join":
           - '-'

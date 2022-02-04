@@ -31,6 +31,7 @@ var parserType, timeFieldName, timeFieldFormat, env string
 var matchPatterns, filterPatterns []string
 var bufferSize uint
 var forceGunzip bool
+var renameFields = map[string]string{}
 
 func Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -77,6 +78,14 @@ func Handler(request events.S3Event) (Response, error) {
 				})
 				continue
 			}
+
+			for k, v := range renameFields {
+				if tmp, ok := parsedLine[k]; ok {
+					parsedLine[v] = tmp
+					delete(parsedLine, k)
+				}
+			}
+
 			hnyEvent := libhoney.NewEvent()
 
 			timestamp := httime.GetTimestamp(parsedLine, timeFieldName, timeFieldFormat)
@@ -155,6 +164,21 @@ func main() {
 	}
 	if strings.ToLower(os.Getenv("FORCE_GUNZIP")) == "true" {
 		forceGunzip = true
+	}
+
+	if os.Getenv("RENAME_FIELDS") != "" {
+		renameFieldsConfig := strings.Split(os.Getenv("RENAME_FIELDS"), ",")
+		for _, kv := range renameFieldsConfig {
+			kvPair := strings.Split(kv, "=")
+
+			if len(kvPair) != 2 {
+				logrus.WithField("arg", kv).
+					Error("Invalid RENAME_FIELD entry. Should be format 'before=after' ")
+				continue
+			}
+
+			renameFields[kvPair[0]] = kvPair[1]
+		}
 	}
 
 	lambda.Start(Handler)
