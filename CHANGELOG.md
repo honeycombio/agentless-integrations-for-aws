@@ -1,5 +1,11 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.4.0 2022-02-09
+
+### Features
+
+- feat: rename fields for alb ingest (#104) | [@ryanking](https://github.com/ryanking)
+
 ## 2.3.1 2022-02-02
 
 ### Fixes
