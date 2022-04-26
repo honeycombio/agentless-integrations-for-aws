@@ -1,5 +1,15 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.4.1 2022-04-26
+
+### Maintenance
+
+- update ci image to cimg/go1.18 (#113) | [@JamieDanielson](https://github.com/JamieDanielson)
+  - fixes openSSL CVE
+- Bump github.com/stretchr/testify from 1.7.0 to 1.7.1 (#109) | [dependabot](https://github.com/dependabot)
+- Bump github.com/aws/aws-sdk-go from 1.42.34 to 1.43.36 (#112) | [dependabot](https://github.com/dependabot)
+- Bump github.com/honeycombio/honeytail from 1.6.0 to 1.6.1 (#102) | [dependabot](https://github.com/dependabot)
+
 ## 2.4.0 2022-02-09
 
 ### Features
