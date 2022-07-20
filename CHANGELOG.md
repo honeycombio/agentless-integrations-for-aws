@@ -1,5 +1,11 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.4.2 2022-07-20
+
+### Maintenance
+
+- Re-release to fix OpenSSL CVE [@kentquirk](https://github.com/kentquirk)
+
 ## 2.4.1 2022-04-26
 
 ### Maintenance
