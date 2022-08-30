@@ -141,13 +141,15 @@ This is used to parse S3 server access logs, which, if configured, are written t
 
 #### MySQL & PostgreSQL RDS Integration for Cloudwatch Logs
 
-You can configure MySQL on RDS to publish its slow query and audit logs to Cloudwatch Logs. For more information, click [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch).
+You can configure MySQL on RDS to publish its slow query logs to Cloudwatch Logs. For more information, click [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch).
 
 After configuring RDS to write to Cloudwatch Logs, you can install the MySQL or PostgreSQL RDS Integration below and get rich MySQL or PostgreSQL event data into Honeycomb in a matter of minutes. Simply supply one or more RDS Cloudwatch Log groups to monitor, provide your Honeycomb write key, and go!
 
 [Click here to install the Mysql RDS Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-rds-mysql-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-rds-mysql.yml)
 
 [Click here to install the PostgreSQL Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-rds-postgresql-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-rds-postgresql.yml)
+
+**Note:** Audit logs are not currently supported.
 
 **Note:** PostgreSQL RDS Integration will not currently parse the details of queries involving quoted table or column names.
 
