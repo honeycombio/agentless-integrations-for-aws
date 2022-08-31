@@ -18,7 +18,8 @@ HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler postgresql-han
 
 for HANDLER in ${HANDLERS}; do
 	cd ${HANDLER}
-	GOOS=linux go build -ldflags "-X github.com/honeycombio/agentless-integrations-for-aws/common.version=${VERSION}"
+	GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -ldflags "-X github.com/honeycombio/agentless-integrations-for-aws/common.version=jijo_test"
+	chmod +x ${HANDLER}
 	cd ${ROOT_DIR}
 	mv ${HANDLER}/${HANDLER} pkg
 done;

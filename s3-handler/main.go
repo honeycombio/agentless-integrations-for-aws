@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
+	"encoding/json"
 	"io"
 	"os"
 	"strconv"
@@ -33,7 +34,24 @@ var bufferSize uint
 var forceGunzip bool
 var renameFields = map[string]string{}
 
-func Handler(request events.S3Event) (Response, error) {
+func Handler(request events.SNSEvent) (Response, error) {
+	s3Event := events.S3Event{}
+	for _, rec := range request.Records {
+		s3EventRecordStr := rec.SNS.Message
+		var s3EventRecord events.S3EventRecord
+		err := json.Unmarshal([]byte(s3EventRecordStr), &s3EventRecord)
+		if err != nil {
+			logrus.WithError(err).Error("failed to unmarshall S3 event from SNS record")
+			continue
+		}
+
+		s3Event.Records = append(s3Event.Records, s3EventRecord)
+	}
+
+	return s3Handler(s3Event)
+}
+
+func s3Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String(os.Getenv("AWS_REGION")),
 	}))
