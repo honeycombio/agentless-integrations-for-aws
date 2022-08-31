@@ -35,19 +35,20 @@ var forceGunzip bool
 var renameFields = map[string]string{}
 
 func Handler(request events.SNSEvent) (Response, error) {
-	s3Event := events.S3Event{}
+	var s3EventRecords []events.S3EventRecord
 	for _, rec := range request.Records {
-		s3EventRecordStr := rec.SNS.Message
-		var s3EventRecord events.S3EventRecord
-		err := json.Unmarshal([]byte(s3EventRecordStr), &s3EventRecord)
+		s3EventStr := rec.SNS.Message
+		var s3Event events.S3Event
+		err := json.Unmarshal([]byte(s3EventStr), &s3Event)
 		if err != nil {
 			logrus.WithError(err).Error("failed to unmarshall S3 event from SNS record")
 			continue
 		}
 
-		s3Event.Records = append(s3Event.Records, s3EventRecord)
+		s3EventRecords = append(s3EventRecords, s3Event.Records...)
 	}
 
+	s3Event := events.S3Event{Records: s3EventRecords}
 	return s3Handler(s3Event)
 }
 
