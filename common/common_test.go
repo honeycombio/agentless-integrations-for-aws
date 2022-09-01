@@ -3,6 +3,8 @@ package common
 import (
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetFilterFields(t *testing.T) {
@@ -28,4 +30,28 @@ func TestGetFilterFields(t *testing.T) {
 	if fields[2] != "c" {
 		t.Error("wrong value in GetFilterFields result")
 	}
+}
+
+func TestGetRenameFields(t *testing.T) {
+	ClearCache()
+
+	t.Setenv("RENAME_FIELDS", "trace_id=trace.trace_id,span_id=trace.span_id")
+
+	expected := map[string]string{"trace_id": "trace.trace_id", "span_id": "trace.span_id"}
+	assert.Equal(t, expected, GetRenameFields())
+
+	t.Setenv("RENAME_FIELDS", "cached=value")
+	assert.Equal(t, expected, GetRenameFields())
+}
+
+func TestGetAliasFields(t *testing.T) {
+	ClearCache()
+
+	t.Setenv("ALIAS_FIELDS", "trace_id=trace.trace_id,span_id=trace.span_id")
+
+	expected := map[string]string{"trace_id": "trace.trace_id", "span_id": "trace.span_id"}
+	assert.Equal(t, expected, GetAliasFields())
+
+	t.Setenv("ALIAS_FIELDS", "cached=value")
+	assert.Equal(t, expected, GetAliasFields())
 }

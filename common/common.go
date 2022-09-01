@@ -27,8 +27,16 @@ var (
 	dataset      string
 	errorDataset string
 	filterFields []string
+	renameFields map[string]string
+	aliasFields  map[string]string
 	version      = "dev"
 )
+
+func ClearCache() {
+	aliasFields = nil
+	filterFields = nil
+	renameFields = nil
+}
 
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
 // passed to the lambda through env vars. The caller is responsible for calling
@@ -195,6 +203,22 @@ func GetFilterFields() []string {
 	return filterFields
 }
 
+func GetRenameFields() map[string]string {
+	if renameFields == nil {
+		renameFields, _ = fieldMappingsFrom("RENAME_FIELDS")
+	}
+
+	return renameFields
+}
+
+func GetAliasFields() map[string]string {
+	if aliasFields == nil {
+		aliasFields, _ = fieldMappingsFrom("ALIAS_FIELDS")
+	}
+
+	return aliasFields
+}
+
 func envOrElseBool(key string, fallback bool) bool {
 	if value, ok := os.LookupEnv(key); ok {
 		v, err := strconv.ParseBool(value)
@@ -225,4 +249,25 @@ func readResponses(responses chan transmission.Response) {
 				metadata, r.StatusCode, r.Err, r.Body)
 		}
 	}
+}
+
+func fieldMappingsFrom(environmentName string) (map[string]string, error) {
+	var mappings = map[string]string{}
+
+	if os.Getenv(environmentName) != "" {
+		fieldsConfig := strings.Split(os.Getenv(environmentName), ",")
+		for _, kv := range fieldsConfig {
+			kvPair := strings.Split(kv, "=")
+
+			if len(kvPair) != 2 {
+				logrus.WithField("arg", kv).
+					Error(fmt.Sprintf("Invalid %s entry. Should be format 'before=after' ", environmentName))
+				continue
+			}
+
+			mappings[kvPair[0]] = kvPair[1]
+		}
+	}
+
+	return mappings, nil
 }

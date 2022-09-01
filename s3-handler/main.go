@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/honeycombio/agentless-integrations-for-aws/common"
-	"github.com/honeycombio/honeytail/httime"
+	"github.com/honeycombio/agentless-integrations-for-aws/s3-handler/albevent"
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
@@ -27,11 +27,10 @@ type Response struct {
 }
 
 var parser parsers.LineParser
-var parserType, timeFieldName, timeFieldFormat, env string
+var parserType string
 var matchPatterns, filterPatterns []string
 var bufferSize uint
 var forceGunzip bool
-var renameFields = map[string]string{}
 
 func Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -79,33 +78,13 @@ func Handler(request events.S3Event) (Response, error) {
 				continue
 			}
 
-			for k, v := range renameFields {
-				if tmp, ok := parsedLine[k]; ok {
-					parsedLine[v] = tmp
-					delete(parsedLine, k)
-				}
-			}
+			albEvent := albevent.NewEvent(parsedLine)
 
-			hnyEvent := libhoney.NewEvent()
+			albEvent.AddField("aws.s3.bucket", record.S3.Bucket.Name)
+			albEvent.AddField("aws.s3.object", record.S3.Object.Key)
 
-			timestamp := httime.GetTimestamp(parsedLine, timeFieldName, timeFieldFormat)
-			hnyEvent.Timestamp = timestamp
+			albEvent.Send()
 
-			// convert ints and floats if necessary
-			if parserType != "json" {
-				hnyEvent.Add(common.ConvertTypes(parsedLine))
-			} else {
-				hnyEvent.Add(parsedLine)
-			}
-
-			hnyEvent.AddField("aws.s3.bucket", record.S3.Bucket.Name)
-			hnyEvent.AddField("aws.s3.object", record.S3.Object.Key)
-			hnyEvent.AddField("env", env)
-			fields := hnyEvent.Fields()
-			for _, field := range common.GetFilterFields() {
-				delete(fields, field)
-			}
-			hnyEvent.Send()
 			ok = scanner.Scan()
 		}
 
@@ -141,10 +120,6 @@ func main() {
 	}
 	common.AddUserAgentMetadata("s3", parserType)
 
-	env = os.Getenv("ENVIRONMENT")
-	timeFieldName = os.Getenv("TIME_FIELD_NAME")
-	timeFieldFormat = os.Getenv("TIME_FIELD_FORMAT")
-
 	matchPatterns = []string{".*"}
 	filterPatterns = []string{}
 	bufferSize = 1024 * 64
@@ -164,21 +139,6 @@ func main() {
 	}
 	if strings.ToLower(os.Getenv("FORCE_GUNZIP")) == "true" {
 		forceGunzip = true
-	}
-
-	if os.Getenv("RENAME_FIELDS") != "" {
-		renameFieldsConfig := strings.Split(os.Getenv("RENAME_FIELDS"), ",")
-		for _, kv := range renameFieldsConfig {
-			kvPair := strings.Split(kv, "=")
-
-			if len(kvPair) != 2 {
-				logrus.WithField("arg", kv).
-					Error("Invalid RENAME_FIELD entry. Should be format 'before=after' ")
-				continue
-			}
-
-			renameFields[kvPair[0]] = kvPair[1]
-		}
 	}
 
 	lambda.Start(Handler)
