@@ -257,8 +257,8 @@ func readResponses(responses chan transmission.Response) {
 func getFieldMappings(environmentName string) (map[string]string, error) {
 	var mappings = map[string]string{}
 
-	if os.Getenv(environmentName) != "" {
-		fieldsConfig := strings.Split(os.Getenv(environmentName), ",")
+	if envVal := os.Getenv(environmentName); envVal != "" {
+		fieldsConfig := strings.Split(envVal, ",")
 		for _, kv := range fieldsConfig {
 			kvPair := strings.Split(kv, "=")
 
