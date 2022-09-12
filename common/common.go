@@ -32,7 +32,10 @@ var (
 	version      = "dev"
 )
 
-func ClearCache() {
+// ClearFieldMappingCache will reset the cached map[string]string values for the
+// alias, filter and rename fields. This is primarily used in testing so that static
+// data does not undesirably bleed into different test runs.
+func ClearFieldMappingCache() {
 	aliasFields = nil
 	filterFields = nil
 	renameFields = nil

@@ -144,7 +144,7 @@ func TestItCanAddMultipleFields(t *testing.T) {
 func TestItCanFilterFields(t *testing.T) {
 	t.Setenv("FILTER_FIELDS", "no,remove_me")
 
-	common.ClearCache()
+	common.ClearFieldMappingCache()
 
 	mappings := map[string]interface{}{"yes": "keep", "no": "bad", "remove_me": false}
 	albEvent := NewEvent(mappings)
@@ -156,7 +156,7 @@ func TestItCanFilterFields(t *testing.T) {
 func TestItCanRenameFields(t *testing.T) {
 	t.Setenv("RENAME_FIELDS", "some_field=new_jack")
 
-	common.ClearCache()
+	common.ClearFieldMappingCache()
 
 	mappings := map[string]interface{}{"some_field": "whatever"}
 	albEvent := NewEvent(mappings)
@@ -168,7 +168,7 @@ func TestItCanRenameFields(t *testing.T) {
 func TestItCanAliasFields(t *testing.T) {
 	t.Setenv("ALIAS_FIELDS", "keep_me=new_jack")
 
-	common.ClearCache()
+	common.ClearFieldMappingCache()
 
 	mappings := map[string]interface{}{"keep_me": "whatever"}
 	albEvent := NewEvent(mappings)

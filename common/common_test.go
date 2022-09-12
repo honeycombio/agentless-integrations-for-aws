@@ -33,7 +33,7 @@ func TestGetFilterFields(t *testing.T) {
 }
 
 func TestGetRenameFields(t *testing.T) {
-	ClearCache()
+	ClearFieldMappingCache()
 
 	t.Setenv("RENAME_FIELDS", "trace_id=trace.trace_id,span_id=trace.span_id")
 
@@ -45,7 +45,7 @@ func TestGetRenameFields(t *testing.T) {
 }
 
 func TestGetAliasFields(t *testing.T) {
-	ClearCache()
+	ClearFieldMappingCache()
 
 	t.Setenv("ALIAS_FIELDS", "trace_id=trace.trace_id,span_id=trace.span_id")
 
