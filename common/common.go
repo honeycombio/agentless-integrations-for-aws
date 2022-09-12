@@ -208,7 +208,7 @@ func GetFilterFields() []string {
 
 func GetRenameFields() map[string]string {
 	if renameFields == nil {
-		renameFields, _ = getFieldMappings("RENAME_FIELDS")
+		renameFields = getFieldMappings("RENAME_FIELDS")
 	}
 
 	return renameFields
@@ -216,7 +216,7 @@ func GetRenameFields() map[string]string {
 
 func GetAliasFields() map[string]string {
 	if aliasFields == nil {
-		aliasFields, _ = getFieldMappings("ALIAS_FIELDS")
+		aliasFields = getFieldMappings("ALIAS_FIELDS")
 	}
 
 	return aliasFields
@@ -254,7 +254,7 @@ func readResponses(responses chan transmission.Response) {
 	}
 }
 
-func getFieldMappings(environmentName string) (map[string]string, error) {
+func getFieldMappings(environmentName string) map[string]string {
 	var mappings = map[string]string{}
 
 	if envVal := os.Getenv(environmentName); envVal != "" {
@@ -272,5 +272,5 @@ func getFieldMappings(environmentName string) (map[string]string, error) {
 		}
 	}
 
-	return mappings, nil
+	return mappings
 }
