@@ -26,7 +26,7 @@ Parameters:
     Description: Sample rate. See https://honeycomb.io/docs/guides/sampling/.
   LogLinePrefix:
     Type: String
-    Default: '%t:%r:%u@%d:[%p]:t'
+    Default: '%t:%r:%u@%d:[%p]:'
     Description: The prefix of each log line. See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.Concepts.PostgreSQL.html#USER_LogAccess.Concepts.PostgreSQL.Log_Format
   LogGroupName:
     Type: String
