@@ -1,5 +1,21 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.4.3 2022-09-27
+
+### Fixed
+
+- Remove trailing "t" from default log_line_prefix (#136) | [@robbkidd](https://github.com/robbkidd)
+- Update README to indicate audit logs are not supported (#132) | [@pkanal](https://github.com/pkanal)
+
+### Maintenance
+
+- Bump github.com/aws/aws-lambda-go from 1.27.1 to 1.34.1 (#128)
+- Bump github.com/aws/aws-sdk-go from 1.43.36 to 1.44.106 (#138)
+- Bump github.com/honeycombio/honeytail from 1.7.1 to 1.8.1 (#134)
+- Bump github.com/honeycombio/libhoney-go from 1.15.8 to 1.17.0 (#137)
+- Bump github.com/sirupsen/logrus from 1.8.1 to 1.9.0 (#127)
+- Bump github.com/honeycombio/honeytail from 1.6.2 to 1.7.1 (#126)
+
 ## 2.4.2 2022-07-20
 
 ### Maintenance
