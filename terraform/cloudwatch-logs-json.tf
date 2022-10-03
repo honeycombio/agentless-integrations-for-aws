@@ -1,4 +1,4 @@
-# This example should help you get going running the generic JSON integration for Cloudwatch ogs
+# This example should help you get going running the generic JSON integration for Cloudwatch Logs
 # It won't work out of the box - you will need to update some environment variables, and possibly tweak
 # the configuration to work within your TF environment.
 resource "aws_iam_role" "honeycomb_cloudwatch_logs" {
