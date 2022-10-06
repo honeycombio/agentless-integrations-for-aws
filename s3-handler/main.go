@@ -61,9 +61,8 @@ func Handler(request events.S3Event) (Response, error) {
 		scanner := bufio.NewScanner(reader)
 		buffer := make([]byte, bufferSize)
 		scanner.Buffer(buffer, int(bufferSize))
-		ok := scanner.Scan()
 		sampleRate := common.GetSampleRate()
-		for ok {
+		for scanner.Scan() {
 			linesRead++
 			if linesRead%10000 == 0 {
 				logrus.WithFields(logrus.Fields{
@@ -74,7 +73,6 @@ func Handler(request events.S3Event) (Response, error) {
 
 			if sampleRate != 1 && rand.Intn(int(sampleRate)) != 0 {
 				// Pre-sample before even attempting to parse line.
-				ok = scanner.Scan()
 				continue
 			}
 
@@ -85,7 +83,6 @@ func Handler(request events.S3Event) (Response, error) {
 				common.WriteErrorEvent(err, "parse error", map[string]interface{}{
 					"meta.raw_message": scanner.Text(),
 				})
-				ok = scanner.Scan()
 				continue
 			}
 
@@ -118,7 +115,6 @@ func Handler(request events.S3Event) (Response, error) {
 			}
 			// Sampling is done in the parser for greater efficiency
 			hnyEvent.SendPresampled()
-			ok = scanner.Scan()
 		}
 
 		if scanner.Err() != nil {
