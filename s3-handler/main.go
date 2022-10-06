@@ -74,6 +74,7 @@ func Handler(request events.S3Event) (Response, error) {
 
 			if sampleRate != 1 && rand.Intn(int(sampleRate)) != 0 {
 				// Pre-sample before even attempting to parse line.
+				ok = scanner.Scan()
 				continue
 			}
 
@@ -84,6 +85,7 @@ func Handler(request events.S3Event) (Response, error) {
 				common.WriteErrorEvent(err, "parse error", map[string]interface{}{
 					"meta.raw_message": scanner.Text(),
 				})
+				ok = scanner.Scan()
 				continue
 			}
 
