@@ -1,5 +1,11 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.4.5 2022-10-06
+
+### Fixed
+
+- [s3] fix bug in sampling & exception cases (#145) | [@lizthegrey](https://github.com/lizthegrey)
+
 ## 2.4.4 2022-10-06
 
 ### Fixed
