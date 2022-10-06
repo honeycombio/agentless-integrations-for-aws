@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"compress/gzip"
 	"io"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -61,6 +62,7 @@ func Handler(request events.S3Event) (Response, error) {
 		buffer := make([]byte, bufferSize)
 		scanner.Buffer(buffer, int(bufferSize))
 		ok := scanner.Scan()
+		sampleRate := common.GetSampleRate()
 		for ok {
 			linesRead++
 			if linesRead%10000 == 0 {
@@ -69,6 +71,12 @@ func Handler(request events.S3Event) (Response, error) {
 					"key":        record.S3.Object.Key,
 				}).Info("parser checkpoint")
 			}
+
+			if sampleRate != 1 && rand.Intn(int(sampleRate)) != 0 {
+				// Pre-sample before even attempting to parse line.
+				continue
+			}
+
 			parsedLine, err := parser.ParseLine(scanner.Text())
 			if err != nil {
 				logrus.WithError(err).WithField("line", scanner.Text()).
@@ -87,6 +95,7 @@ func Handler(request events.S3Event) (Response, error) {
 			}
 
 			hnyEvent := libhoney.NewEvent()
+			hnyEvent.SampleRate = sampleRate
 
 			timestamp := httime.GetTimestamp(parsedLine, timeFieldName, timeFieldFormat)
 			hnyEvent.Timestamp = timestamp
@@ -105,7 +114,8 @@ func Handler(request events.S3Event) (Response, error) {
 			for _, field := range common.GetFilterFields() {
 				delete(fields, field)
 			}
-			hnyEvent.Send()
+			// Sampling is done in the parser for greater efficiency
+			hnyEvent.SendPresampled()
 			ok = scanner.Scan()
 		}
 
