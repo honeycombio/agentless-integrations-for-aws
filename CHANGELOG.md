@@ -1,5 +1,15 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.4.4 2022-10-06
+
+### Fixed
+
+- [s3] presample before parsing (#143) | [@lizthegrey](https://github.com/lizthegrey)
+
+### Maintenance
+
+- Bump github.com/aws/aws-sdk-go from 1.44.106 to 1.44.109 (#141)
+
 ## 2.4.3 2022-09-27
 
 ### Fixed
