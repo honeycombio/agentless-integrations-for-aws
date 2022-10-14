@@ -71,7 +71,7 @@ func Handler(request events.S3Event) (Response, error) {
 				}).Info("parser checkpoint")
 			}
 
-			if sampleRate != 0 && sampleRate != 1 && rand.Intn(int(sampleRate)) != 0 {
+			if sampleRate != 1 && rand.Intn(int(sampleRate)) != 0 {
 				// Pre-sample before even attempting to parse line.
 				continue
 			}
