@@ -43,8 +43,9 @@ func InitHoneycombFromEnvVars() error {
 		if err != nil || uint(i) == 0 {
 			logrus.WithField("sample_rate", os.Getenv("SAMPLE_RATE")).
 				Warn("Warning: unable to parse sample rate or sample rate configured as 0, falling back to 1.")
+		} else {
+			sampleRate = uint(i)
 		}
-		sampleRate = uint(i)
 	}
 
 	// If KMS_KEY_ID is supplied, we assume we're dealing with an encrypted key.
