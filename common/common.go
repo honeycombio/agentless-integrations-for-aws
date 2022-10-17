@@ -40,7 +40,7 @@ func InitHoneycombFromEnvVars() error {
 		i, err := strconv.Atoi(os.Getenv("SAMPLE_RATE"))
 		// including a check on sample rate being configured as 0.
 		// assumption: intention of setting 0 is that no sampling is desired.
-		if err != nil || uint(i) == 0 {
+		if err != nil || i <= 0 {
 			logrus.WithField("sample_rate", os.Getenv("SAMPLE_RATE")).
 				Warn("Warning: unable to parse sample rate or sample rate configured as 0, falling back to 1.")
 		} else {
