@@ -30,6 +30,16 @@ var (
 	version      = "dev"
 )
 
+const (
+	patternALB = `(?P<type>[^ ]+) (?P<timestamp>[^ ]+) (?P<elb>[^ ]+) (?P<client>[^ ]+) (?P<target>[^ ]+) (?P<request_processing_time>[^ ]+) (?P<target_processing_time>[^ ]+) (?P<response_processing_time>[^ ]+) (?P<elb_status_code>[^ ]+) (?P<target_status_code>[^ ]+) (?P<received_bytes>[^ ]+) (?P<sent_bytes>[^ ]+) "(?P<request>[^"]+)" "(?P<user_agent>[^"]+)" (?P<ssl_cipher>[^ ]+) (?P<ssl_protocol>[^ ]+) (?P<target_group_arn>[^ ]+) "Root=(?P<trace_id>[^"]+)" "(?P<domain_name>[^"]+)" "(?P<chosen_cert_arn>[^"]+)" (?P<matched_rule_priority>[^ ]+) (?P<request_creation_time>[^ ]+) "(?P<actions_executed>[^"]+)" "(?P<redirect_url>[^"]+)" "(?P<error_reason>[^"]+)" "(?P<target_list>[^"]+)" "(?P<target_status_code_list>[^"]+)"`
+
+	patternELB = `(?P<timestamp>.+) (?P<elb>.+) (?P<client_authority>.+) (?P<backend_authority>.+) (?P<request_processing_time>.+) (?P<backend_processing_time>.+) (?P<response_processing_time>.+) (?P<elb_status_code>.+) (?P<backend_status_code>.+) (?P<received_bytes>.+) (?P<sent_bytes>.+) (?P<request>".+") (?P<user_agent>".+") (?P<ssl_cipher>.+) (?P<ssl_protocol>.+)`
+
+	patternS3Access = `(?P<bucket_owner>[^\s]+) (?P<bucket>[^\s]+) \[(?P<timestamp>.+?)\] (?P<remote_ip>[^\s]+) (?P<requester>[^\s]+) (?P<request_id>[^\s]+) (?P<operation>[^\s]+) (?P<key>[^\s]+) "(?P<request_uri>.+?)" (?P<http_status>[^\s]+) (?P<error_code>[^\s]+) (?P<bytes_sent>[^\s]+) (?P<object_size>[^\s]+) (?P<total_time>[^\s]+) (?P<turnaround_time>[^\s]+) "(?P<referrer>.+?)" "(?P<user_agent>.+?)" (?P<version_id>[^\s]+) (?P<host_id>[^\s]+) (?P<signature_version>[^\s]+) (?P<cipher_suite>[^\s]+) (?P<auth_type>[^\s]+) (?P<host_header>[^\s]+) (?P<tls_version>[^\s]+)`
+
+	patternVPCFlow = `'(?P<version>\d+) (?P<account_id>\d+) (?P<interface_id>eni-[0-9a-f]+) (?P<src_addr>[\d\.]+) (?P<dst_addr>[\d\.]+) (?P<src_port>\d+) (?P<dst_port>\d+) (?P<protocol>\d+) (?P<packets>\d+) (?P<bytes>\d+) (?P<start_time>\d+) (?P<end_time>\d+) (?P<action>[A-Z]+) (?P<log_status>[A-Z]+)'`
+)
+
 // InitHoneycombFromEnvVars will attempt to call libhoney.Init based on values
 // passed to the lambda through env vars. The caller is responsible for calling
 // libhoney.Close afterward. Will return an err if insufficient ENV vars were
@@ -117,19 +127,29 @@ func InitHoneycombFromEnvVars() error {
 // ConstructParser accepts a parser name and attempts to build the parser,
 // pulling additional environment variables as needed
 func ConstructParser(parserType string) (parsers.LineParser, error) {
-	if parserType == "regex" {
+	switch parserType {
+	case "alb":
+		return regex.NewRegexLineParser([]string{patternALB})
+	case "elb":
+		return regex.NewRegexLineParser([]string{patternELB})
+	case "s3-access", "s3_access":
+		return regex.NewRegexLineParser([]string{patternS3Access})
+	case "vpc-flow", "vpc_flow":
+		return regex.NewRegexLineParser([]string{patternVPCFlow})
+	case "regex":
 		regexVal := os.Getenv("REGEX_PATTERN")
 		regexParser, err := regex.NewRegexLineParser([]string{regexVal})
 		if err != nil {
 			return nil, fmt.Errorf("failed to create regex parser: %s", err.Error())
 		}
 		return regexParser, nil
-	} else if parserType == "json" {
+	case "json":
 		return &htjson.JSONLineParser{}, nil
-	} else if parserType == "keyval" {
+	case "keyval":
 		return &keyval.KeyValLineParser{}, nil
+	default:
+		return nil, fmt.Errorf("Unknown parser: %s", parserType)
 	}
-	return nil, fmt.Errorf("Unknown parser: %s", parserType)
 }
 
 // ConvertTypes will convert strings into integer and floats if applicable
