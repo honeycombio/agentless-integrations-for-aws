@@ -32,6 +32,7 @@ var parserType, timeFieldName, timeFieldFormat, env string
 var matchPatterns, filterPatterns []string
 var bufferSize uint
 var forceGunzip bool
+var fieldRedaction *fieldRedactionHandler // redaction runs before renaming
 var renameFields = map[string]string{}
 
 func Handler(request events.SNSEvent) (Response, error) {
@@ -96,6 +97,10 @@ func s3Handler(request events.S3Event) (Response, error) {
 					"meta.raw_message": scanner.Text(),
 				})
 				continue
+			}
+
+			if fieldRedaction != nil {
+				fieldRedaction.redact(parsedLine)
 			}
 
 			for k, v := range renameFields {
@@ -183,6 +188,16 @@ func main() {
 	}
 	if strings.ToLower(os.Getenv("FORCE_GUNZIP")) == "true" {
 		forceGunzip = true
+	}
+
+	if redactFields := os.Getenv("REDACT_FIELDS"); redactFields != "" {
+		var err error
+		fieldRedaction, err = newFieldRedactionHandler(redactFields)
+		if err != nil {
+			logrus.WithError(err).WithField("arg", redactFields).
+				Fatal("Invalid REDACT_FIELDS value. Must be a json string (optionally base64 encoded)")
+			return
+		}
 	}
 
 	if os.Getenv("RENAME_FIELDS") != "" {
