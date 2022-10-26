@@ -1,5 +1,11 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.4.6 2022-10-26
+
+### Fixed
+
+- [s3] Protect against Intn panicking if sample rate is set to 0 (#148) | @mjayaram
+
 ## 2.4.5 2022-10-06
 
 ### Fixed
