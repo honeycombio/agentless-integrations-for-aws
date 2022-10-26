@@ -41,7 +41,6 @@ func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.Kin
 	for _, record := range input.Records {
 		cwb, err := decodeData(record.Data)
 		if err != nil {
-			fmt.Println(err)
 			return events.KinesisFirehoseResponse{}, err
 		}
 
@@ -82,7 +81,6 @@ func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.Kin
 
 			b, err := json.Marshal(parsedEventJson)
 			if err != nil {
-				fmt.Println(err)
 				return events.KinesisFirehoseResponse{}, err
 			}
 
@@ -103,20 +101,17 @@ func decodeData(data []byte) (CloudWatchLogBody, error) {
 
 	gr, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
-		fmt.Println(err)
 		return CloudWatchLogBody{}, err
 	}
 	gr.Multistream(false)
 	defer gr.Close()
 	if err != nil {
-		fmt.Println(err)
 		return CloudWatchLogBody{}, err
 	}
 
 	decoder := json.NewDecoder(gr)
 	err = decoder.Decode(&cwb)
 	if err != nil && err != io.EOF {
-		fmt.Println(err)
 		return CloudWatchLogBody{}, err
 	}
 	return cwb, nil
