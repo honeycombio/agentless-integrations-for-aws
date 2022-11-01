@@ -74,9 +74,7 @@ resource "aws_lambda_function" "vpc_flow_log" {
   environment {
     variables = {
       ENVIRONMENT = "production" # change me
-      PARSER_TYPE = "regex"
-      # this pattern has been tested against the current version of VPC flow logs
-      REGEX_PATTERN = "(?P<version>\\d+) (?P<account_id>\\d+) (?P<interface_id>eni-[0-9a-f]+) (?P<src_addr>[\\d\\.]+) (?P<dst_addr>[\\d\\.]+) (?P<src_port>\\d+) (?P<dst_port>\\d+) (?P<protocol>\\d+) (?P<packets>\\d+) (?P<bytes>\\d+) (?P<start_time>\\d+) (?P<end_time>\\d+) (?P<action>[A-Z]+) (?P<log_status>[A-Z]+)"
+      PARSER_TYPE = "vpc-flow"
       # Change this to your encrypted Honeycomb write key or your raw write key (not recommended)
       HONEYCOMB_WRITE_KEY = "CHANGEME"
       # If the write key is encrypted, specify the KMS Key ID used to encrypt your write key
