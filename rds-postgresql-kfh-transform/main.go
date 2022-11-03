@@ -119,7 +119,7 @@ func decodeData(data []byte) (CloudWatchLogBody, error) {
 
 func main() {
 	parser = &postgresql.Parser{}
-	parser.Init(&postgresql.Options{})
+	parser.Init(&postgresql.Options{LogLinePrefix: "%t:%r:%u@%d:[%p]:"})
 	common.AddUserAgentMetadata("rds", "postgresql")
 	lambda.Start(handler)
 }
