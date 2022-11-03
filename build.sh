@@ -14,7 +14,7 @@ ROOT_DIR=$(pwd)
 rm -rf pkg
 mkdir pkg
 
-HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler postgresql-handler publisher"
+HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler postgresql-handler publisher kfh-lambda-transforms/rds-mysql-handler kfh-lambda-transforms/rds-postgresql-handler"
 
 for HANDLER in ${HANDLERS}; do
 	cd ${HANDLER}
