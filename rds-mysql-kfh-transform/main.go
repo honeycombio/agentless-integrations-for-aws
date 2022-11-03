@@ -84,8 +84,6 @@ func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.Kin
 				return events.KinesisFirehoseResponse{}, err
 			}
 
-			//TODO: gzip the encoded data once ingest can handle it
-
 			var transformedRecord events.KinesisFirehoseResponseRecord
 			transformedRecord.RecordID = record.RecordID
 			transformedRecord.Result = events.KinesisFirehoseTransformedStateOk
