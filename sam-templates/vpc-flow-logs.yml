@@ -1,26 +1,26 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: Sends VPC flow logs to Honeycomb
-Parameters: 
-  Environment: 
+Parameters:
+  Environment:
     Type: String
     Default: ''
     Description: Name of environment, if applicable - will get appended to each event
-  HoneycombWriteKey: 
+  HoneycombWriteKey:
     Type: String
     Description: KMS-encrypted blob of your honeycomb write key.
   KMSKeyId:
     Type: String
     Description: Id of KMS key used to encrypt the Honeycomb Write Key
-  HoneycombAPIHost: 
+  HoneycombAPIHost:
     Type: String
     Default: https://api.honeycomb.io
     Description: Optionally set an alternative API host
-  HoneycombDataset: 
+  HoneycombDataset:
     Type: String
     Default: vpc-flow-logs
     Description: Target honeycomb dataset
-  HoneycombSampleRate: 
+  HoneycombSampleRate:
     Type: Number
     Default: 1
     Description: Sample rate - for higher volumes, we recommend increasing this.
@@ -39,8 +39,7 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Ref Environment
-          PARSER_TYPE: regex
-          REGEX_PATTERN: '(?P<version>\d+) (?P<account_id>\d+) (?P<interface_id>eni-[0-9a-f]+) (?P<src_addr>[\d\.]+) (?P<dst_addr>[\d\.]+) (?P<src_port>\d+) (?P<dst_port>\d+) (?P<protocol>\d+) (?P<packets>\d+) (?P<bytes>\d+) (?P<start_time>\d+) (?P<end_time>\d+) (?P<action>[A-Z]+) (?P<log_status>[A-Z]+)'
+          PARSER_TYPE: vpc-flow
           HONEYCOMB_WRITE_KEY: !Ref HoneycombWriteKey
           API_HOST: !Ref HoneycombAPIHost
           DATASET: !Ref HoneycombDataset
