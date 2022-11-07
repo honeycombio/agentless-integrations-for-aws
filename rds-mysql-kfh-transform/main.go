@@ -16,20 +16,6 @@ import (
 	"github.com/honeycombio/honeytail/parsers/mysql"
 )
 
-type CloudWatchLogBody struct {
-	Type      string               `json:"messageType"`
-	Owner     string               `json:"owner"`
-	LogGroup  string               `json:"logGroup"`
-	LogStream string               `json:"logStream"`
-	Events    []CloudWatchLogEvent `json:"logEvents"`
-}
-
-type CloudWatchLogEvent struct {
-	ID        string `json:"id"`
-	Timestamp int64  `json:"timestamp"`
-	Message   string `json:"message"`
-}
-
 var parser *mysql.Parser
 
 func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.KinesisFirehoseResponse, error) {
@@ -45,14 +31,14 @@ func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.Kin
 		}
 
 		// these messages ensure kinesis can reach the lambda and don't require processing
-		if cwb.Type == "CONTROL_MESSAGE" {
+		if cwb.MessageType == "CONTROL_MESSAGE" {
 			var droppedRecord events.KinesisFirehoseResponseRecord
 			droppedRecord.RecordID = record.RecordID
 			droppedRecord.Result = events.KinesisFirehoseTransformedStateDropped
 			response.Records = append(response.Records, droppedRecord)
-		} else if cwb.Type == "DATA_MESSAGE" {
+		} else if cwb.MessageType == "DATA_MESSAGE" {
 			var parsedEventJson []map[string]interface{}
-			for _, v := range cwb.Events {
+			for _, v := range cwb.LogEvents {
 				lines := make(chan string)
 				parsedEvents := make(chan event.Event)
 				go func() {
@@ -94,12 +80,12 @@ func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.Kin
 	return response, nil
 }
 
-func decodeData(data []byte) (CloudWatchLogBody, error) {
-	var cwb CloudWatchLogBody
+func decodeData(data []byte) (events.CloudwatchLogsData, error) {
+	var cwb events.CloudwatchLogsData
 
 	gr, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
-		return CloudWatchLogBody{}, err
+		return events.CloudwatchLogsData{}, err
 	}
 	gr.Multistream(false)
 	defer gr.Close()
@@ -107,7 +93,7 @@ func decodeData(data []byte) (CloudWatchLogBody, error) {
 	decoder := json.NewDecoder(gr)
 	err = decoder.Decode(&cwb)
 	if err != nil && err != io.EOF {
-		return CloudWatchLogBody{}, err
+		return events.CloudwatchLogsData{}, err
 	}
 	return cwb, nil
 }
