@@ -103,9 +103,6 @@ func decodeData(data []byte) (CloudWatchLogBody, error) {
 	}
 	gr.Multistream(false)
 	defer gr.Close()
-	if err != nil {
-		return CloudWatchLogBody{}, err
-	}
 
 	decoder := json.NewDecoder(gr)
 	err = decoder.Decode(&cwb)
