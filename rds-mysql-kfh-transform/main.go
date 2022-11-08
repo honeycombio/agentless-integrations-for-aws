@@ -83,6 +83,7 @@ func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.Kin
 func decodeData(data []byte) (events.CloudwatchLogsData, error) {
 	var cwb events.CloudwatchLogsData
 
+	// kinesis firehose send data payloads gzipped
 	gr, err := gzip.NewReader(bytes.NewReader(data))
 	if err != nil {
 		return events.CloudwatchLogsData{}, err
