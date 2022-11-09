@@ -27,8 +27,8 @@ fi
 echo "+++ Uploading handlers"
 for REGION in ${REGIONS}; do
 	DEPLOY_ROOT=s3://honeycomb-integrations-${REGION}/agentless-integrations-for-aws
-	aws s3 cp ${DRYRUN} ${ZIP_PATH} ${DEPLOY_ROOT}/LATEST/${ZIP_NAME}
 	aws s3 cp ${DRYRUN} ${ZIP_PATH} ${DEPLOY_ROOT}/${VERSION}/${ZIP_NAME}
+	[[ -n "$CIRCLE_TAG" ]] && aws s3 cp ${DRYRUN} ${ZIP_PATH} ${DEPLOY_ROOT}/LATEST/${ZIP_NAME}
 done
 
 # publish the templates to our builds bucket
@@ -36,6 +36,6 @@ DEPLOY_ROOT=s3://honeycomb-builds/honeycombio/integrations-for-aws
 
 echo "+++ Uploading templates"
 for TEMPLATE in templates/*; do
-	aws s3 cp ${DRYRUN} ${TEMPLATE} ${DEPLOY_ROOT}/LATEST/${TEMPLATE}
 	aws s3 cp ${DRYRUN} ${TEMPLATE} ${DEPLOY_ROOT}/${VERSION}/${TEMPLATE}
+	[[ -n "$CIRCLE_TAG" ]] && aws s3 cp ${DRYRUN} ${TEMPLATE} ${DEPLOY_ROOT}/LATEST/${TEMPLATE}
 done
