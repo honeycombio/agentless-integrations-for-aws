@@ -1,5 +1,26 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.5.0 2022-11-10
+
+### Features
+
+- RDS Lambda transforms (#160) | [@brookesargent](https://github.com/brookesargent)
+- Embed service regexs into code (#150) | [@dstrelau](https://github.com/dstrelau)
+
+### Fixed
+
+- [s3] Protect against Intn panicing if sample rate is set to 0 (#148) | [@mjayaram](https://github.com/mjayaram)
+
+### Maintenance
+
+- publish every main build to S3 (#161) | [@dstrelau](https://github.com/dstrelau)
+- Bump github.com/aws/aws-sdk-go from 1.44.109 to 1.44.127 (#158) | [@dependabot](https://github.com/dependabot)
+- Bump github.com/stretchr/testify from 1.8.0 to 1.8.1 (#155) | [@dependabot](https://github.com/dependabot)
+- Bump github.com/honeycombio/libhoney-go from 1.17.0 to 1.18.0 (#157) | [@dependabot](https://github.com/dependabot)
+- maint: delete workflows for old board (#152) | [@vreynolds](https://github.com/vreynolds)
+- maint: add release file (#149) | [@vreynolds](https://github.com/vreynolds)
+- maint: add new project workflow (#147) | [@vreynolds](https://github.com/vreynolds)
+
 ## 2.4.5 2022-10-06
 
 ### Fixed
