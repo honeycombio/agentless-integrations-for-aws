@@ -109,7 +109,12 @@ workflows:
           requires:
             - go_test
       - publish_aws:
-          <<: *filters_main_and_tags
+          # <<: *filters_main_and_tags
+          filters:
+            branches:
+              only: dstrelau/publish-tags
+            tags:
+              only: /^v[0-9].*/
           context: Honeycomb Secrets for Public Repos
           requires:
             - validate_templates
