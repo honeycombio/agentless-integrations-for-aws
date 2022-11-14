@@ -17,10 +17,12 @@ filters_publish: &filters_publish
     branches:
       ignore: /.*/
 
-filters_main: &filters_main
+filters_main_and_tags: &filters_main_and_tags
   filters:
     branches:
       only: main
+    tags:
+      only: /^v[0-9].*/
 
 orbs:
   aws-cli: circleci/aws-cli@2.0.3
@@ -107,7 +109,7 @@ workflows:
           requires:
             - go_test
       - publish_aws:
-          <<: *filters_main
+          <<: *filters_main_and_tags
           context: Honeycomb Secrets for Public Repos
           requires:
             - validate_templates
