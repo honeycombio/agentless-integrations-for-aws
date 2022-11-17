@@ -150,8 +150,32 @@ func main() {
 	common.AddUserAgentMetadata("s3", parserType)
 
 	env = os.Getenv("ENVIRONMENT")
+
+	// try to set some reasonable defaults if we know the parser type
+	// having these unset is okay, as httime will try to figure it out.
 	timeFieldName = os.Getenv("TIME_FIELD_NAME")
+	if timeFieldName == "" {
+		switch parserType {
+		case "cloudfront":
+			timeFieldName = "datetime"
+		case "elb", "alb":
+			timeFieldName = "timestamp"
+		case "vpc-flow":
+			timeFieldName = "start_time"
+		}
+	}
+
 	timeFieldFormat = os.Getenv("TIME_FIELD_FORMAT")
+	if timeFieldFormat == "" {
+		switch parserType {
+		case "cloudfront":
+			timeFieldFormat = "2006-01-02\t15:04:05"
+		case "elb", "alb":
+			timeFieldFormat = "2006-01-02T15:04:05.9999Z"
+		case "vpc-flow":
+			timeFieldFormat = "%s(%L)?" // honeytail/httime.UnixTimestampFmt
+		}
+	}
 
 	matchPatterns = []string{".*"}
 	filterPatterns = []string{}
