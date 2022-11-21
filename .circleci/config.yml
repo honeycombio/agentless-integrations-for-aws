@@ -44,15 +44,6 @@ jobs:
       - checkout
       - run: go get -v -t -d ./...
       - run: go test -v ./...
-  validate_templates:
-    executor: go
-    steps:
-      - checkout
-      - aws-cli/setup:
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
-          aws-region: AWS_REGION
-      - run: ./test.sh
   build:
     executor: go
     steps:
@@ -94,16 +85,6 @@ workflows:
     jobs:
       - go_test:
           <<: *filters_always
-      - validate_templates:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore:
-                - /pull\/.*/
-                - /dependabot\/.*/
-          # Testing templates requires AWS API access; no changes are made
-          context: Honeycomb Secrets for Public Repos
       - build:
           <<: *filters_always
           requires:
@@ -112,11 +93,9 @@ workflows:
           <<: *filters_main_and_tags
           context: Honeycomb Secrets for Public Repos
           requires:
-            - validate_templates
             - build
       - publish_github:
           <<: *filters_publish
           context: Honeycomb Secrets for Public Repos
           requires:
-            - validate_templates
             - build
