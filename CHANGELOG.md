@@ -1,5 +1,12 @@
 # agentless-integrations-for-aws Changelog
 
+## 2.6.0 2022-11-21
+
+### Features
+
+- Cloudfront Lambda transforms (#166) | [@dstrelau](https://github.com/dstrelau)
+
+
 ## 2.5.0 2022-11-10
 
 ### Features
