@@ -2,328 +2,79 @@
 
 [![OSS Lifecycle](https://img.shields.io/osslifecycle/honeycombio/agentless-integrations-for-aws?color=success)](https://github.com/honeycombio/home/blob/main/honeycomb-oss-lifecycle-and-practices.md)
 
-AWS Agentless integration to send data to [Honeycomb](https://www.honeycomb.io), a service for debugging your software in production.
+This is a collection of AWS Lambda functions to collect log data from AWS services, transform it into structured events, and send it to [Honeycomb](https://honeycomb.io).
 
-This is a collection of AWS Lambda-based integrations packaged in AWS Cloudformation, designed to help you get data from AWS services without the need to run a server-based agent. We currently accept Cloudwatch Logs and S3.
+The easiest way to get started is to use either our [Terraform modules](https://github.com/honeycombio/terraform-aws-integrations) or [CloudFormation templates](https://github.com/honeycombio/cloudformation-integrations) to deploy these functions along with all the required AWS infrastructure.
 
-We hope to support more AWS services in the future - your feedback will help us know which services to add support for first. This is a BETA - there may still be some bugs, and behavior may change in the future. We're also working to refine the installation process to get you going even faster!
+## Features
 
-If you aren't serverless, you may be looking for [`honeyaws`](https://github.com/honeycombio/honeyaws).
+### Logs in a Bucket
 
-## Current Features
+The `s3-handler` function will watch any S3 bucket for new files, parsing them into structured events and sending them to Honeycomb.
+This function is setup with an S3 Bucket Notification triggering the function on each new file placed in the bucket.
+It invokes `S3:GetObject` on the object, retrieves its contents, parses it line by line, and sends the resulting events directly to Honeycomb, using Honeycomb's custom event format.
 
-- Generic JSON integration for Cloudwatch Logs
-- Generic RegEx integration for Cloudwatch Logs
-- VPC Flow Log integration for Cloudwatch Logs
-- Generic JSON integration for S3 Logs
-- AWS ELB integration for S3 Logs
-- AWS ALB integration for S3 Logs
-- S3 Bucket Log integration for S3 Logs
-- MySQL RDS Integration for Cloudwatch Logs
-- PostgreSQL RDS Integration for Cloudwatch Logs
-- Honeycomb Publisher for Lambda
+Built-in parsers to transform unstructured log messages into structured events:
+    - ELB access logs
+    - ALB access logs
+    - CloudFront access logs
+    - S3 access logs
+    - VPC flow logs
+Additionally, a JSON parser can collect arbitrary [JSON lines](https://jsonlines.org) files and a generic regexp parser can structure custom log formats.
 
-## Installation
+To get started, include the [s3-logfile Terraform module](TODO: registry link) or launch the [s3-logfile CloudFormation stack](TODO: CF repo link).
 
-### Generic JSON integration for Cloudwatch
+### Kinesis Firehose Transforms
 
-[Click here](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-cloudwatch-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-logs-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per Cloudwatch Log Group. The integration is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
+The `*-kfh-transform` functions act as Kinesis Firehose transform functions to take unstructured logs and parse them into structured events.
+These functions act as stream processors, structuring Kinesis log records, which are ultimately be delivered to Honeycomb's [Kinesis Firehose HTTP endpoint](https://docs.honeycomb.io/getting-data-in/aws/how-aws-integrations-work/#how-aws-cloudwatch-logs-integrations-work).
 
-- Stack Name
-- Cloudwatch Log Group Name
-- Your honeycomb write key (optionally encrypted)
-- Target honeycomb dataset
+Parsers exist for the following services:
+- MySQL RDS slow query log
+- PostgreSQL RDS logs
 
-Optional inputs include:
+To get started, include the [rds-logs Terraform module](TODO: registry link) or launch the [rds-logs CloudFormation stack](https://github.com/honeycombio/cloudformation-integrations/blob/main/README.md#rds-logs).
 
-- Sample rate
-- The ID of the AWS Key Management Service key used to encrypt your write key. If your write key is not encrypted, do not set a value here
+## Advanced Configuration
 
-### Generic JSON integration for S3
+### Logs in a Bucket
 
-[Click here](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-s3-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/s3-logs-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per S3 bucket that you want to subscribe to. The integration is configured using Cloudformation parameters, and for this template you will need to supply the following parameters:
+### Environment Variables
 
-- Stack Name
-- Cloudwatch Log Group Name
-- Your honeycomb write key (optionally encrypted)
-- Target honeycomb dataset
+The `s3-handler` accepts a number of of environment variables to configure behavior. Using Terraform or CloudFormation will set this values correctly.
 
-Optional inputs include:
+Under most circumstances, custom setups will want to configure at minimum:
 
-- Sample rate
-- The ID of the AWS Key Management Service key used to encrypt your write key. If your write key is not encrypted, do not set a value here
-- Match and filter patterns, if you want to selectively process files in the bucket. For example, `production` or a simple regex like `^.+\.log$`
+- `DATASET` - the name of the dataset to send events to.
+- `HONEYCOMB_WRITE_KEY` (required) - your [Honeycomb API key](https://docs.honeycomb.io/getting-data-in/api-keys/) that has, at minimum, permissions to send events.
+- `PARSER_TYPE` - built-in parsers like `alb` or `cloudfront` will configure for a known log format. `regex` will parse with an arbitrary user-defined regular expression. `keyval` will parse logs in `key=val` format. `json` will assume each line is a JSON object. See [here](https://github.com/honeycombio/agentless-integrations-for-aws/blob/main/common/common.go#L131-L157) for the full list of accepted values.
 
-#### Sending S3 events to Lambda
+Advanced use cases may require these additional configuration options:
 
-After your stack is created, you will need to manually configure your bucket to send PutObject and Upload events to Lambda.
+- `FILTER_FIELDS` - a comma-separated list of field names (JSON keys) to ignore, dropping them from any event that contains them. Useful to drop very large values or secret values.
+- `REGEX_PATTERN` - with `PARSER_TYPE=regex`, will define the regular expression to use for parsing each line in the log file. Honeycomb columns are generated by defining named capture groups. For example, `(?P<name>[a-z]+)` would create a column called "name" if successfully parsed.
+- `RENAME_FIELDS` - a comma-separate list of `before=after` pairs, where each `before` field will be renamed to `after`.
+- `SAMPLE_RATE` - an integer > 0, indicating a sample rate. Only `1/SAMPLE_RATE` log messages will be kept, randomly.
+- `TIME_FIELD_FORMAT` - a [Golang-compatible time formatting string](https://pkg.go.dev/time#Time.Format), specified as the reference time of `"01/02 03:04:05PM '06 -0700"`.
+- `TIME_FIELD_NAME` - the name of the field to use as the timestamp for when this event occurred. If using a built-in parser like `alb` or `cloudfront`, will be set to an appropriate value.
 
-From the AWS console, select the bucket that you want to subscribe to and select __Properties__:
+#### Lambda Configuration
 
-![alt text](docs/s3_step1.png)
-
-Find __Advanced Settings__ and click __Events__:
-
-![alt text](docs/s3_step2.png)
-
-Enable events __Put__ and __Complete Multipart Upload__ and select the lambda belonging to the honeycomb s3 integration. If you have multiple integrations, remember to select the integration belonging to the stack that has permissions to access your bucket. You can optionally set a prefix and suffix, if you only want a subset of objects to be processed by your lambda. This is recommended if the bucket has multiple uses.
-
-![alt text](docs/s3_step3.png)
-
-**Note**: The S3 integration respects the `Content-Encoding` header on the object when deciding to decompress. If your files are gzip-compressed but do not have `Content-Encoding: gzip` set, you will need to set the `ForceGunzip` option to true.
-
-### Generic JSON integration for SNS
-
-[Click here](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-sns-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/sns-json.yml) to launch the AWS Cloudformation Console to create the integration stack. You will need one stack per SNS topic that you want to subscribe to.
-
-### Honeycomb Publisher for Lambda
-
-The Honeycomb Publisher for Lambda receives and publishes Honeycomb events on behalf of other Honeycomb-instrumented Lambda functions. It allows events to be sent asynchronously, rather
-than blocking the upstream function. The source function is modified so that its instrumentation goes to STDOUT. Lambda writes this output to a Cloudwatch Log Group, and the publisher subscribes to one or more Cloudwatch Log Groups and sends the instrumentation on to Honeycomb.
-
-A sample event looks like this. Fields are stored in the `data` map, the event timestamp comes from the `time` field, and the target dataset is specified in `dataset`. If `dataset` is missing, events go to a fallback dataset.
-
-```json
-{
-    "data": {
-        "key": "8825.samplerate.int32c",
-        "object_size": 537310,
-        "open_elapsed_ms": 111,
-        "reached_eof": true,
-        "stream_total_ms": 689,
-        "sum_bytes_read": 537310
-    },
-    "time": "2019-08-20T18:53:08.443956295Z",
-    "dataset": "target-dataset"
-}
-```
-
-[Honeycomb Beelines](https://docs.honeycomb.io/getting-data-in/beelines/) and SDKs have built-in support for output to STDOUT. Consult the documentation for your language to learn how to enable it.
-
-[Click here](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=honeycomb-publisher&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/publisher.yml) to install.
-
-
-### Other integrations
-
-#### VPC Flow Log Integration
-
-The VPC flow log integration uses the regex integration with predefined inputs that work for VPC flow logs.
-
-[Click here to install the VPC Flow Log Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-vpc-flow-logs&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/vpc-flow-logs.yml)
-
-#### Generic RegEx Integration for Cloudwatch
-
-The generic regex integration accepts arbitrary regex ([re2](https://github.com/google/re2/wiki/Syntax)) to use to parse each line. Honeycomb columns are generated by defining named capture groups. For example, `(?P<name>re)` would create a column called "name" if successfully parsed.
-
-[Click here to install the Generic Regex Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-cloudwatch-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-logs-regex.yml)
-
-#### AWS ELB Integration for S3 Logs
-
-Used to parse ELB logs, which are saved to S3 periodically by the ELB service. You can use the __MatchPatterns__ and __FilterPatterns__ parameters to selectively target specific ELBs.
-
-[Click here to install the AWS ELB Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-elb-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/aws-elb-logs.yml)
-
-After this is installed, you will need to manually configure your ELB log bucket to send events to the lambda function. See instructions above for __Sending S3 events to Lambda__.
-
-#### AWS ALB Integration for S3 Logs
-
-Used to parse ALB logs, which are saved to S3 periodically by the ALB service. You can use the __MatchPatterns__ and __FilterPatterns__ parameters to selectively target specific ALBs.
-
-[Click here to install the AWS ALB Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-alb-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/aws-alb-logs.yml)
-
-After this is installed, you will need to manually configure your ALB log bucket to send events to the lambda function. See instructions above for __Sending S3 events to Lambda__.
-
-#### AWS S3 Bucket Logs Integration
-
-This is used to parse S3 server access logs, which, if configured, are written to another bucket periodically by the S3 service.
-
-[Click here to install the AWS S3 Bucket Log Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-s3-bucket-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/s3-bucket-logs.yml)
-
-#### MySQL & PostgreSQL RDS Integration for Cloudwatch Logs
-
-You can configure MySQL on RDS to publish its slow query logs to Cloudwatch Logs. For more information, click [here](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_LogAccess.html#USER_LogAccess.Procedural.UploadtoCloudWatch).
-
-After configuring RDS to write to Cloudwatch Logs, you can install the MySQL or PostgreSQL RDS Integration below and get rich MySQL or PostgreSQL event data into Honeycomb in a matter of minutes. Simply supply one or more RDS Cloudwatch Log groups to monitor, provide your Honeycomb write key, and go!
-
-[Click here to install the Mysql RDS Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-rds-mysql-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-rds-mysql.yml)
-
-[Click here to install the PostgreSQL Integration](https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=honeycomb-rds-postgresql-log-integration&templateURL=https://s3.amazonaws.com/honeycomb-builds/honeycombio/integrations-for-aws/LATEST/templates/cloudwatch-rds-postgresql.yml)
-
-**Note:** Audit logs are not currently supported.
-
-**Note:** PostgreSQL RDS Integration will not currently parse the details of queries involving quoted table or column names.
-
-## How it works
-
-### Cloudwatch
-
-The Cloudformation template creates the following resources:
-
-- An AWS Lambda Function
-- An IAM role and policy used by the Lambda function. This role grants the Lambda function the ability to write to Cloudwatch (for its own logging) and to decrypt your write key using the provided KMS key (if applicable)
-- A Lambda Permission granting Cloudwatch the ability to invoke this function
-- A Cloudwatch Subscription Filter, which invokes this function when new Cloudwatch log events are received
-
-When an event is written to the subscribed Cloudwatch Log Group, it is forwarded to the Honeycomb Lambda function, which parses the log line and forwards it to Honeycomb.
-
-### S3
-
-The Cloudformation template creates the following resources:
-
-- An AWS Lambda Function
-- An IAM role and policy used by the Lambda function. This role grants the Lambda function the ability to write to Cloudwatch (for its own logging), retrieve objects from the specified bucket, and decrypt your write key using the provided KMS key (if applicable).
-- A Lambda Permission granting S3 the ability to invoke this function
-
-When an object is uploaded to your bucket, an S3 event object is passed to the lambda function. The lambda function invokes `S3:GetObject` on the object, retrieves its contents, and parses them line by line.
-
-#### CAVEATS
-
-Lambda's execution time is capped at 5 minutes. If you upload sufficiently large logs (in the 100s of megabytes or more), the function may not process all events before Lambda times out. It's best to submit your logs in smaller chunks - Lambda can scale to process more logs better than it can scale to process larger logs.
-
-Increasing the MemorySize of the Lambda also increases its CPU allocation. If you are unable to break up your logs into smaller objects, and you find that the logs aren't being processed in the allowed 5 minutes, increasing MemorySize can lead to faster processing of events.
-
-The S3 integration will interpret object content types `application/x-gzip` and `application/octet-stream` as gzipped content, and will attempt to decompress them.
-
-## Encrypting your Write Key
-
-When installing the integration, you must supply your honeycomb write key via Cloudformation parameter. Cloudformation parameters are not encrypted, and are plainly viewable to anyone with access to your Cloudformation stacks. For this reason, we strongly recommend that your Honeycomb write key be encrypted. To encrypt your key, use AWS's KMS service.
-
-First, you'll need to create a KMS key if you don't have one already. The default account keys are not suitable for this use case.
-
-```
-$ aws kms create-key --description "used to encrypt secrets"
-{
-    "KeyMetadata": {
-        "AWSAccountId": "123455678910",
-        "KeyId": "a38f80cc-19b5-486a-a163-a4502b7a52cc",
-        "Arn": "arn:aws:kms:us-east-1:123455678910:key/a38f80cc-19b5-486a-a163-a4502b7a52cc",
-        "CreationDate": 1524160520.097,
-        "Enabled": true,
-        "Description": "used to encrypt honeycomb secrets",
-        "KeyUsage": "ENCRYPT_DECRYPT",
-        "KeyState": "Enabled",
-        "Origin": "AWS_KMS",
-        "KeyManager": "CUSTOMER"
-    }
-}
-$ aws kms create-alias --alias-name alias/secrets_key --target-key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc
-```
-
-Save a file containing only your Honeycomb API Key to be passed into the encryption step. For example, if abc123 is your Honeycomb API Key and my-key is the name of the file, create the file like this:
-
-```shell
-echo -n abc123 > my-key
-```
-
-Now you're ready to encrypt your Honeycomb write key:
-
-```
-$ aws kms encrypt --key-id=a38f80cc-19b5-486a-a163-a4502b7a52cc --plaintext fileb://my-key
-{
-    "CiphertextBlob": "AQICAHge4+BhZ1sURk1UGUjTZxmcegPXyRqG8NCK8/schk381gGToGRb8n3PCjITQPDKjxuJAAAAcjBwBgkqhkiG9w0BBwagYzBhAgEAMFwGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM0GLK36ChLOlHQiiiAgEQgC9lYlR3qvsQEhgILHhT0eD4atgdB7UAMW6TIAJw9vYsPpnbHhqhO7V8/mEa9Iej+g==",
-    "KeyId": "arn:aws:kms:us-east-1:702835727665:key/a38f80cc-19b5-486a-a163-a4502b7a52cc"
-}
-```
-
-Record the `CiphertextBlob` and the last part of the Key ID (example: `a38f80cc-19b5-486a-a163-a4502b7a52cc`) - this is what you'll pass to the Cloudformation templates.
-
-## Advanced Installation Steps
-
-### Terraform
-
-See the [`terraform`](terraform) directory in this repo for examples of Terraform configs.
-
-If you want to get up and running with configurable production-ready modules, see the modules published by the [`terra-farm`](https://github.com/terra-farm) community
-on the Terraform Registry:
-
-https://registry.terraform.io/modules/terra-farm/honeycomb/aws/
-
-Sources can be found on [their Github repository](https://github.com/terra-farm/terraform-aws-honeycomb).
-
-### Building the stack with the AWS CLI
-
-If you need to turn up several stacks, or just don't like the Cloudformation UI, use the [AWS CLI](https://aws.amazon.com/cli/) and the script below. You'll also find this script under `examples/deploy-generic-json.sh`. You'll need to update values for `STACK_NAME`, `LOG_GROUP_NAME`, `HONEYCOMB_WRITE_KEY`, `KMS_KEY_ID`.
-
-```bash
-#!/bin/bash
-ENVIRONMENT=production
-STACK_NAME=CHANGEME
-# change this to the log group name used by your application
-LOG_GROUP_NAME=/change/me
-# this is the base64-encoded KMS encrypted CiphertextBlob containing your write key
-# To encrypt your key, run `aws kms encrypt --key-id $MY_KMS_KEY_ID --plaintext "$MY_HONEYCOMB_KEY"`
-# paste the CyphertextBlob here
-HONEYCOMB_WRITE_KEY=changeme
-# this is the KMS Key ID used to encrypt the write key above
-# try running `aws kms list-keys` - you want the UID after ":key/" in the ARN
-KMS_KEY_ID=changeme
-DATASET="cloudwatch-logs"
-HONEYCOMB_SAMPLE_RATE="1"
-TEMPLATE="file://./templates/cloudwatch-logs-json.yml"
-
-JSON=$(cat << END
-{
-    "StackName": "${STACK_NAME}",
-    "Parameters": [
-        {
-            "ParameterKey": "Environment",
-            "ParameterValue": "${ENVIRONMENT}"
-        },
-        {
-            "ParameterKey": "HoneycombWriteKey",
-            "ParameterValue": "${HONEYCOMB_WRITE_KEY}"
-        },
-        {
-            "ParameterKey": "KMSKeyId",
-            "ParameterValue": "${KMS_KEY_ID}"
-        },
-        {
-            "ParameterKey": "HoneycombDataset",
-            "ParameterValue": "${DATASET}"
-        },
-        {
-            "ParameterKey": "HoneycombSampleRate",
-            "ParameterValue": "${HONEYCOMB_SAMPLE_RATE}"
-        },
-        {
-            "ParameterKey": "LogGroupName",
-            "ParameterValue": "${LOG_GROUP_NAME}"
-        },
-        {
-            "ParameterKey": "TimeFieldName",
-            "ParameterValue": ""
-        },
-        {
-            "ParameterKey": "TimeFieldFormat",
-            "ParameterValue": ""
-        }
-    ],
-    "Capabilities": [
-        "CAPABILITY_IAM"
-    ],
-    "OnFailure": "ROLLBACK",
-    "Tags": [
-        {
-            "Key": "Environment",
-            "Value": "${ENVIRONMENT}"
-        }
-    ]
-}
-END
-)
-
-aws cloudformation create-stack --cli-input-json "${JSON}" --template-body=${TEMPLATE}
-```
-
-If successful, you should see an output like this:
-
-```json
-{
-    "StackId": "arn:aws:cloudformation:us-east-1:12345678910:stack/my-stack-name/19b46840-4348-11e8-9090-500c28b4e461"
-}
-```
+You should monitor your Lambda's execution metrics (hint: [Honeycomb can import CloudWatch Metrics](https://docs.honeycomb.io/getting-data-in/aws/how-aws-integrations-work/#metrics-via-aws-cloudwatch-metrics) to ensure it has sufficient memory to process logs and does not time out. Both the function's memory and timeout can be configured either in the AWS Console or via Terraform/CloudFormation.
 
 ## Debugging
 
+First, check the function's logs (usually in CloudWatch Logs) to ensure no errors are reported.
+
 If you don't see events in Honeycomb, there may be errors returned from the Honeycomb API. To see API responses, you can enable debugging
- by adding the following environment variable to the lambda function created by the stack: `HONEYCOMB_DEBUG=true`
+by adding the following environment variable to the lambda function created by the stack: `HONEYCOMB_DEBUG=true`
+
+Something not working? Other questions? Create a GitHub Issue, or join our Slack community, Pollinators ([invite link](https://join.slack.com/t/honeycombpollinators/shared_invite/zt-xqexg936-dckd0l29wdE3WLmUs8Qvpg) to get help.
+
+## Contributing
+
+Features, bug fixes and other changes are gladly accepted.
+Please open issues or a pull request with your change.
+Remember to add your name to the CONTRIBUTORS file!
+
+All contributions will be released under the Apache License 2.0.
