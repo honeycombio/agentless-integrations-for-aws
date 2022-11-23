@@ -1,5 +1,14 @@
 # agentless-integrations-for-aws Changelog
 
+## 3.0.0 2022-11-23
+
+Introducing NEW [CloudFormation](https://github.com/honeycombio/cloudformation-integrations) & [Terraform](https://github.com/honeycombio/terraform-aws-integrations) support. 
+Modules and templates are no longer maintained in this repo.
+
+### Enhancement
+
+-  Remove CloudFormation/Terraform & Rewrite README Significantly (#167) | [@dstrelau](https://github.com/dstrelau)
+
 ## 2.6.0 2022-11-21
 
 ### Features
