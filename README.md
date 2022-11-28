@@ -33,7 +33,7 @@ Parsers exist for the following services:
 - MySQL RDS slow query log
 - PostgreSQL RDS logs
 
-To get started, include the [rds-logs Terraform module](TODO: registry link) or launch the [rds-logs CloudFormation stack](https://github.com/honeycombio/cloudformation-integrations/blob/main/README.md#rds-logs).
+To get started, include the [rds-logs Terraform module](https://registry.terraform.io/modules/honeycombio/integrations/aws/latest/submodules/rds-logs) or launch the [rds-logs CloudFormation stack](https://github.com/honeycombio/cloudformation-integrations#rds-cloudwatch-logs).
 
 ## Advanced Configuration
 
