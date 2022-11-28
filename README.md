@@ -22,7 +22,7 @@ Built-in parsers to transform unstructured log messages into structured events:
     - VPC flow logs
 Additionally, a JSON parser can collect arbitrary [JSON lines](https://jsonlines.org) files and a generic regexp parser can structure custom log formats.
 
-To get started, include the [s3-logfile Terraform module](TODO: registry link) or launch the [s3-logfile CloudFormation stack](TODO: CF repo link).
+To get started, include the [s3-logfile Terraform module](https://registry.terraform.io/modules/honeycombio/integrations/aws/latest/submodules/s3-logfile) or launch the [s3-logfile CloudFormation stack](https://github.com/honeycombio/cloudformation-integrations#logs-from-a-s3-bucket).
 
 ### Kinesis Firehose Transforms
 
@@ -33,8 +33,7 @@ Parsers exist for the following services:
 - MySQL RDS slow query log
 - PostgreSQL RDS logs
 
-To get started, include the [rds-logs Terraform module](TODO: registry link) or launch the [rds-logs CloudFormation stack](https://github.com/honeycombio/cloudformation-integrations/blob/main/README.md#rds-logs).
-
+To get started, include the [rds-logs Terraform module](https://registry.terraform.io/modules/honeycombio/integrations/aws/latest/submodules/rds-logs) or launch the [rds-logs CloudFormation stack](https://github.com/honeycombio/cloudformation-integrations/blob/main/README.md#rds-cloudwatch-logs).
 ## Advanced Configuration
 
 ### Logs in a Bucket
