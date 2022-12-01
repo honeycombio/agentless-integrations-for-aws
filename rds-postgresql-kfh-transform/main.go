@@ -27,7 +27,13 @@ func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.Kin
 	for _, record := range input.Records {
 		cwb, err := decodeData(record.Data)
 		if err != nil {
-			return events.KinesisFirehoseResponse{}, err
+			// not CloudWatch Logs data? Just put it back on the stream untouched
+			var unknownRecord events.KinesisFirehoseResponseRecord
+			unknownRecord.RecordID = record.RecordID
+			unknownRecord.Result = events.KinesisFirehoseTransformedStateOk
+			unknownRecord.Data = record.Data
+			response.Records = append(response.Records, unknownRecord)
+			continue
 		}
 
 		// these messages ensure kinesis can reach the lambda and don't require processing
