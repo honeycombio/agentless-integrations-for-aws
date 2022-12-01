@@ -73,7 +73,13 @@ func handler(ctx context.Context, input events.KinesisFirehoseEvent) (events.Kin
 
 			b, err := json.Marshal(parsedEventJson)
 			if err != nil {
-				return events.KinesisFirehoseResponse{}, err
+				// put the record back on the stream as a processing failure
+				var failedRecord events.KinesisFirehoseResponseRecord
+				failedRecord.RecordID = record.RecordID
+				failedRecord.Result = events.KinesisFirehoseTransformedStateProcessingFailed
+				failedRecord.Data = record.Data
+				response.Records = append(response.Records, failedRecord)
+				continue
 			}
 
 			var transformedRecord events.KinesisFirehoseResponseRecord
