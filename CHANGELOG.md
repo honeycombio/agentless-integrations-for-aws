@@ -1,5 +1,18 @@
 # agentless-integrations-for-aws Changelog
 
+## 3.0.1 2022-12-02
+
+### Fixed
+
+- KFH RDS Transform: pass non-CloudWatch Log data through unaltered (#178) | [@jharley](https://github.com/jharley)
+- KFH RDS Transform: mark unparsable records as failures (#179) | [@jharley](https://github.com/jharley)
+
+### Maintenance
+- Bump github.com/honeycombio/honeytail from 1.8.1 to 1.8.2 (#174) | [@dependabot](https://github.com/dependabot)
+- Bump github.com/aws/aws-lambda-go from 1.34.1 to 1.35.0 (#176) | [@dependabot](https://github.com/dependabot)
+- Bump github.com/aws/aws-sdk-go from 1.44.127 to 1.44.150 (#177) | [@dependabot](https://github.com/dependabot)
+- KFH RDS Transform: refactor code into 'common' package (#180) | [@jharley](https://github.com/jharley)
+
 ## 3.0.0 2022-11-23
 
 Introducing NEW [CloudFormation](https://github.com/honeycombio/cloudformation-integrations) & [Terraform](https://github.com/honeycombio/terraform-aws-integrations) support. 
