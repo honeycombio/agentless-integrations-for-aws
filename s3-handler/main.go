@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"compress/gzip"
+	"encoding/json"
 	"io"
 	"math/rand"
 	"os"
@@ -33,6 +34,13 @@ var matchPatterns, filterPatterns []string
 var bufferSize uint
 var forceGunzip bool
 var renameFields = map[string]string{}
+
+type sampleRateRule struct {
+	Prefix     string `json:"Prefix"`
+	SampleRate uint   `json:"SampleRate"`
+}
+
+var sampleRateRules []sampleRateRule
 
 func Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -71,7 +79,19 @@ func Handler(request events.S3Event) (Response, error) {
 				}).Info("parser checkpoint")
 			}
 
-			if sampleRate != 1 && rand.Intn(int(sampleRate)) != 0 {
+			sampleRateForLine := sampleRate
+
+			if len(sampleRateRules) > 0 {
+				for _, rule := range sampleRateRules {
+					if rule.Prefix != "" && strings.HasPrefix(record.S3.Object.Key, rule.Prefix) {
+						// not worried about having `0` here because that is checked at parse time
+						sampleRateForLine = rule.SampleRate
+						break
+					}
+				}
+			}
+
+			if sampleRateForLine != 1 && rand.Intn(int(sampleRateForLine)) != 0 {
 				// Pre-sample before even attempting to parse line.
 				continue
 			}
@@ -94,7 +114,7 @@ func Handler(request events.S3Event) (Response, error) {
 			}
 
 			hnyEvent := libhoney.NewEvent()
-			hnyEvent.SampleRate = sampleRate
+			hnyEvent.SampleRate = sampleRateForLine
 
 			timestamp := httime.GetTimestamp(parsedLine, timeFieldName, timeFieldFormat)
 			hnyEvent.Timestamp = timestamp
@@ -131,6 +151,41 @@ func Handler(request events.S3Event) (Response, error) {
 	}, nil
 }
 
+func parseSampleRateRules(input []byte) ([]sampleRateRule, error) {
+	var result []sampleRateRule
+	err := json.Unmarshal(input, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rule := range result {
+		if rule.SampleRate == 0 {
+			rule.SampleRate = 1
+		}
+	}
+
+	return result, nil
+}
+
+func initSamplingRules() error {
+	rulesRaw := os.Getenv("SAMPLE_RATE_RULES")
+	logrus.WithField("SAMPLE_RATE_RULES", rulesRaw).Info("Got sample rate rules")
+
+	if rulesRaw == "" {
+		sampleRateRules = make([]sampleRateRule, 0)
+		return nil
+	}
+
+	parsedRules, err := parseSampleRateRules([]byte(rulesRaw))
+
+	if err != nil {
+		return err
+	}
+
+	sampleRateRules = parsedRules
+	return nil
+}
+
 func main() {
 	var err error
 	if err = common.InitHoneycombFromEnvVars(); err != nil {
@@ -138,6 +193,13 @@ func main() {
 			Fatal("Unable to initialize libhoney with the supplied environment variables")
 		return
 	}
+
+	if err = initSamplingRules(); err != nil {
+		logrus.WithError(err).
+			Fatalf("unable to parse sampling rate rules: %v", err)
+		return
+	}
+
 	defer libhoney.Close()
 
 	parserType = os.Getenv("PARSER_TYPE")
