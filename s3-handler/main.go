@@ -81,13 +81,11 @@ func Handler(request events.S3Event) (Response, error) {
 
 			sampleRateForLine := sampleRate
 
-			if len(sampleRateRules) > 0 {
-				for _, rule := range sampleRateRules {
-					if rule.Prefix != "" && strings.HasPrefix(record.S3.Object.Key, rule.Prefix) {
-						// not worried about having `0` here because that is checked at parse time
-						sampleRateForLine = rule.SampleRate
-						break
-					}
+			for _, rule := range sampleRateRules {
+				if rule.Prefix != "" && strings.HasPrefix(record.S3.Object.Key, rule.Prefix) {
+					// not worried about having `0` here because that is checked at parse time
+					sampleRateForLine = rule.SampleRate
+					break
 				}
 			}
 
@@ -158,9 +156,9 @@ func parseSampleRateRules(input []byte) ([]sampleRateRule, error) {
 		return nil, err
 	}
 
-	for _, rule := range result {
-		if rule.SampleRate == 0 {
-			rule.SampleRate = 1
+	for i, _ := range result {
+		if result[i].SampleRate == 0 {
+			result[i].SampleRate = 1
 		}
 	}
 
@@ -172,18 +170,12 @@ func initSamplingRules() error {
 	logrus.WithField("SAMPLE_RATE_RULES", rulesRaw).Info("Got sample rate rules")
 
 	if rulesRaw == "" {
-		sampleRateRules = make([]sampleRateRule, 0)
 		return nil
 	}
 
-	parsedRules, err := parseSampleRateRules([]byte(rulesRaw))
-
-	if err != nil {
-		return err
-	}
-
-	sampleRateRules = parsedRules
-	return nil
+	var err error
+	sampleRateRules, err = parseSampleRateRules([]byte(rulesRaw))
+	return err
 }
 
 func main() {
