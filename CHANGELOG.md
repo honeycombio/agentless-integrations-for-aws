@@ -1,5 +1,12 @@
 # agentless-integrations-for-aws Changelog
 
+## Unreleased
+
+### Enhancement
+
+- Adds support for a SAMPLE_RATE_RULES environment variable for the s3 handler, 
+  allowing you to apply different sample rates for different bucket prefixes.
+
 ## 3.0.1 2022-12-02
 
 ### Fixed
