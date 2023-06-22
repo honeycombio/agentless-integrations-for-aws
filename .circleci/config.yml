@@ -25,7 +25,7 @@ filters_main_and_tags: &filters_main_and_tags
       only: /^v[0-9].*/
 
 orbs:
-  aws-cli: circleci/aws-cli@2.0.3
+  aws-cli: circleci/aws-cli@3.2.0
 
 executors:
   go:
@@ -62,8 +62,8 @@ jobs:
       - attach_workspace:
           at: ./
       - aws-cli/setup:
-          aws-access-key-id: AWS_ACCESS_KEY_ID
-          aws-secret-access-key: AWS_SECRET_ACCESS_KEY
+          role-arn: "arn:aws:iam::702835727665:role/circleci-public-repos"
+          role-session-name: "agentless-integrations-for-aws"
           aws-region: AWS_REGION
       - run: ./publish_aws.sh
   publish_github:
