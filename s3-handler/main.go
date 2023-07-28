@@ -95,7 +95,7 @@ func Handler(request events.S3Event) (Response, error) {
 			}
 
 			parsedLine, err := parser.ParseLine(scanner.Text())
-			if err != nil {
+			if err != nil || len(parsedLine) == 0 {
 				logrus.WithError(err).WithField("line", scanner.Text()).
 					Warn("failed to parse line")
 				common.WriteErrorEvent(err, "parse error", map[string]interface{}{
@@ -103,7 +103,7 @@ func Handler(request events.S3Event) (Response, error) {
 				})
 				continue
 			}
-
+			
 			for k, v := range renameFields {
 				if tmp, ok := parsedLine[k]; ok {
 					parsedLine[v] = tmp

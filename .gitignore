@@ -3,3 +3,6 @@ cloudwatch-handler/cloudwatch-handler
 s3-handler/s3-handler
 sns-handler/sns-handler
 mysql-handler/mysql-handler
+
+.idea
+.DS_Store
