@@ -103,7 +103,31 @@ func Handler(request events.S3Event) (Response, error) {
 				})
 				continue
 			}
-			
+
+			// handle XRay formatted trace id
+			if tmp, ok := parsedLine["trace_id"]; ok {
+				tmpString := tmp.(string)
+				if strings.Contains(tmpString, "Root=") {
+					parts := strings.Split(tmpString, ";")
+					for _, v := range parts {
+						p := strings.Split(v, "=")
+						if len(p) > 1 {
+							key := p[0]
+							switch key {
+							case "Root":
+								parsedLine["trace_id"] = p[1]
+							case "Self":
+								parsedLine["trace_id.self"] = p[1]
+							case "Parent":
+								parsedLine["trace_id.parent"] = p[1]
+							case "Sampled":
+								parsedLine["trace_id.sampling_decision"] = p[1]
+							}
+						}
+					}
+				}
+			}
+
 			for k, v := range renameFields {
 				if tmp, ok := parsedLine[k]; ok {
 					parsedLine[v] = tmp
