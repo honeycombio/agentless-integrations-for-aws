@@ -21,7 +21,7 @@ require (
 	github.com/honeycombio/mysqltools v0.0.1 // indirect
 	github.com/honeycombio/sqlparser v0.0.0-20180730202938-aab361df519b // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/klauspost/compress v1.16.0 // indirect
+	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
