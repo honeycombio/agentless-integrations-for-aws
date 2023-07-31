@@ -14,7 +14,6 @@ import (
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/exp/maps"
 	"io"
 	"math/rand"
 	"os"
@@ -106,8 +105,7 @@ func Handler(request events.S3Event) (Response, error) {
 
 			// handle XRay formatted trace id
 			if tmp, ok := parsedLine["trace_id"]; ok {
-				ids := parseXRayTraceID(tmp.(string))
-				maps.Copy(parsedLine, ids)
+				parseXRayTraceID(tmp.(string), parsedLine)
 			}
 
 			for k, v := range renameFields {
