@@ -277,20 +277,22 @@ func main() {
 func parseXRayTraceID(traceID string, m map[string]interface{}) {
 	if strings.Contains(traceID, "Root=") {
 		parts := strings.Split(traceID, ";")
-		for _, v := range parts {
-			switch {
-			case strings.HasPrefix(v, "Root="):
-				m["trace_id"] = v[5:]
-			case strings.HasPrefix(v, "Self="):
-				m["trace_id.self"] = v[5:]
-			case strings.HasPrefix(v, "Parent="):
-				m["trace_id.parent"] = v[7:]
-			case strings.HasPrefix(v, "Sampled="):
-				m["trace_id.sampling_decision"] = v[8:]
+		for _, p := range parts {
+			key, val, found := strings.Cut(p, "=")
+			if !found {
+				continue
+			}
+			switch key {
+			case "Root":
+				m["trace_id"] = val
+			case "Self":
+				m["trace_id.self"] = val
+			case "Parent":
+				m["trace_id.parent"] = val
+			case "Sampled":
+				m["trace_id.sampling_decision"] = val
 			default:
-				if idx := strings.Index(v, "="); idx > -1 && len(v) > idx {
-					m["headers."+v[:idx]] = v[idx+1:]
-				}
+				m["headers."+key] = val
 			}
 		}
 	}
