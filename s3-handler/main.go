@@ -122,6 +122,9 @@ func Handler(request events.S3Event) (Response, error) {
 								parsedLine["trace_id.parent"] = p[1]
 							case "Sampled":
 								parsedLine["trace_id.sampling_decision"] = p[1]
+							default:
+								// this accounts for custom fields that may end up in the X-Amzn-Trace-Id field
+								parsedLine["headers."+key] = p[1]
 							}
 						}
 					}
