@@ -276,31 +276,26 @@ func main() {
 	lambda.Start(Handler)
 }
 
-func parseXRayTraceID(traceID string) map[string]interface{} {
-	var ids = make(map[string]interface{})
+func parseXRayTraceID(traceID string, m map[string]interface{}) {
 	if strings.Contains(traceID, "Root=") {
 		parts := strings.Split(traceID, ";")
 		for _, v := range parts {
-			p := strings.Split(v, "=")
-			if len(p) > 1 {
-				key := p[0]
-				switch key {
-				case "Root":
-					ids["trace_id"] = p[1]
-				case "Self":
-					ids["trace_id.self"] = p[1]
-				case "Parent":
-					ids["trace_id.parent"] = p[1]
-				case "Sampled":
-					ids["trace_id.sampling_decision"] = p[1]
-				default:
-					// this accounts for custom fields that may end up in the X-Amzn-Trace-Id field
-					ids["headers."+key] = p[1]
+			switch {
+			case strings.HasPrefix(v, "Root="):
+				m["trace_id"] = v[5:]
+			case strings.HasPrefix(v, "Self="):
+				m["trace_id.self"] = v[5:]
+			case strings.HasPrefix(v, "Parent="):
+				m["trace_id.parent"] = v[7:]
+			case strings.HasPrefix(v, "Sampled="):
+				m["trace_id.sampling_decision"] = v[8:]
+			default:
+				if idx := strings.Index(v, "="); idx > -1 && len(v) > idx {
+					m["headers."+v[:idx]] = v[idx+1:]
 				}
 			}
 		}
 	}
-	return ids
 }
 
 func getReaderForKey(svc *s3.S3, bucket, key string) (io.ReadCloser, error) {
