@@ -4,12 +4,6 @@ import (
 	"bufio"
 	"compress/gzip"
 	"encoding/json"
-	"io"
-	"math/rand"
-	"os"
-	"strconv"
-	"strings"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +14,12 @@ import (
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/exp/maps"
+	"io"
+	"math/rand"
+	"os"
+	"strconv"
+	"strings"
 )
 
 // Response is a simple structured response
@@ -106,29 +106,8 @@ func Handler(request events.S3Event) (Response, error) {
 
 			// handle XRay formatted trace id
 			if tmp, ok := parsedLine["trace_id"]; ok {
-				tmpString := tmp.(string)
-				if strings.Contains(tmpString, "Root=") {
-					parts := strings.Split(tmpString, ";")
-					for _, v := range parts {
-						p := strings.Split(v, "=")
-						if len(p) > 1 {
-							key := p[0]
-							switch key {
-							case "Root":
-								parsedLine["trace_id"] = p[1]
-							case "Self":
-								parsedLine["trace_id.self"] = p[1]
-							case "Parent":
-								parsedLine["trace_id.parent"] = p[1]
-							case "Sampled":
-								parsedLine["trace_id.sampling_decision"] = p[1]
-							default:
-								// this accounts for custom fields that may end up in the X-Amzn-Trace-Id field
-								parsedLine["headers."+key] = p[1]
-							}
-						}
-					}
-				}
+				ids := parseXRayTraceID(tmp.(string))
+				maps.Copy(parsedLine, ids)
 			}
 
 			for k, v := range renameFields {
@@ -295,6 +274,33 @@ func main() {
 	}
 
 	lambda.Start(Handler)
+}
+
+func parseXRayTraceID(traceID string) map[string]interface{} {
+	var ids = make(map[string]interface{})
+	if strings.Contains(traceID, "Root=") {
+		parts := strings.Split(traceID, ";")
+		for _, v := range parts {
+			p := strings.Split(v, "=")
+			if len(p) > 1 {
+				key := p[0]
+				switch key {
+				case "Root":
+					ids["trace_id"] = p[1]
+				case "Self":
+					ids["trace_id.self"] = p[1]
+				case "Parent":
+					ids["trace_id.parent"] = p[1]
+				case "Sampled":
+					ids["trace_id.sampling_decision"] = p[1]
+				default:
+					// this accounts for custom fields that may end up in the X-Amzn-Trace-Id field
+					ids["headers."+key] = p[1]
+				}
+			}
+		}
+	}
+	return ids
 }
 
 func getReaderForKey(svc *s3.S3, bucket, key string) (io.ReadCloser, error) {
