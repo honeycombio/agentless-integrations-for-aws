@@ -4,12 +4,6 @@ import (
 	"bufio"
 	"compress/gzip"
 	"encoding/json"
-	"io"
-	"math/rand"
-	"os"
-	"strconv"
-	"strings"
-
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +14,11 @@ import (
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
+	"io"
+	"math/rand"
+	"os"
+	"strconv"
+	"strings"
 )
 
 // Response is a simple structured response
@@ -95,13 +94,18 @@ func Handler(request events.S3Event) (Response, error) {
 			}
 
 			parsedLine, err := parser.ParseLine(scanner.Text())
-			if err != nil {
+			if err != nil || len(parsedLine) == 0 {
 				logrus.WithError(err).WithField("line", scanner.Text()).
 					Warn("failed to parse line")
 				common.WriteErrorEvent(err, "parse error", map[string]interface{}{
 					"meta.raw_message": scanner.Text(),
 				})
 				continue
+			}
+
+			// handle XRay formatted trace id
+			if tmp, ok := parsedLine["trace_id"]; ok {
+				parseXRayTraceID(tmp.(string), parsedLine)
 			}
 
 			for k, v := range renameFields {
@@ -268,6 +272,30 @@ func main() {
 	}
 
 	lambda.Start(Handler)
+}
+
+func parseXRayTraceID(traceID string, m map[string]interface{}) {
+	if strings.Contains(traceID, "Root=") {
+		parts := strings.Split(traceID, ";")
+		for _, p := range parts {
+			key, val, found := strings.Cut(p, "=")
+			if !found {
+				continue
+			}
+			switch key {
+			case "Root":
+				m["trace_id"] = val
+			case "Self":
+				m["trace_id.self"] = val
+			case "Parent":
+				m["trace_id.parent"] = val
+			case "Sampled":
+				m["trace_id.sampling_decision"] = val
+			default:
+				m["headers."+key] = val
+			}
+		}
+	}
 }
 
 func getReaderForKey(svc *s3.S3, bucket, key string) (io.ReadCloser, error) {
