@@ -1,5 +1,18 @@
 # agentless-integrations-for-aws Changelog
 
+## 3.2.0 2023-08-01
+
+### Fixed
+
+- S3 Handler: Handle all variations of AWS X-Ray trace id and error on unparsed events (#214) | [@brookesargent](https://github.com/brookesargent)
+
+### Maintenance
+
+- Bump github.com/aws/aws-sdk-go from 1.44.273 to 1.44.294 (#211)
+- Bump github.com/honeycombio/libhoney-go from 1.18.0 to 1.20.0 (#212)
+- Bump github.com/sirupsen/logrus from 1.9.2 to 1.9.3 (#213)
+- Bump github.com/aws/aws-sdk-go from 1.44.294 to 1.44.313 (#215)
+
 ## 3.1.0 2023-06-08
 
 ### Enhancement
