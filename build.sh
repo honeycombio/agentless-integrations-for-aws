@@ -18,11 +18,8 @@ HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler postgresql-han
 
 for HANDLER in ${HANDLERS}; do
 	cd ${HANDLER}
-	GOOS=linux go build -ldflags "-X github.com/honeycombio/agentless-integrations-for-aws/common.version=${VERSION}"
+	GOARCH=amd64 GOOS=linux go build -ldflags "-X github.com/honeycombio/agentless-integrations-for-aws/common.version=${VERSION}" -o bootstrap
+	zip ${HANDLER}.zip bootstrap
+	mv ${HANDLER}.zip ${ROOT_DIR}/pkg
 	cd ${ROOT_DIR}
-	mv ${HANDLER}/${HANDLER} pkg
 done;
-
-cd ./pkg
-
-zip ingest-handlers.zip *
