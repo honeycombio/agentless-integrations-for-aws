@@ -1,5 +1,18 @@
 # agentless-integrations-for-aws Changelog
 
+## 4.0.0 2023-10-13
+
+Upgrade from go1.x runtime to provided.al2 runtime ahead of the December 31st go1.x deprecation. 
+Lambda binaries are now packaged individually instead of all together in `ingest-handlers.zip`.
+One zip per Lambda function and build architecture. i.e. `s3-handler-arm64.zip`.
+
+### Maintenance
+
+- Bump github.com/aws/aws-sdk-go from 1.44.313 to 1.45.1 (#217)
+- Bump github.com/aws/aws-sdk-go from 1.45.1 to 1.45.19 (#219)
+- Upgrade go1.x to provided.al2 runtime (#220)
+- Update publish-aws script for both archs (#221)
+
 ## 3.2.0 2023-08-01
 
 ### Fixed
