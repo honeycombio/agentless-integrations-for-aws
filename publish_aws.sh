@@ -9,7 +9,7 @@ set -e
 GIT_VERSION="`git describe | sed -e s/^v//`"
 VERSION="${CIRCLE_TAG:-$GIT_VERSION}"
 REGIONS="us-east-1 us-east-2 us-west-1 us-west-2 ap-south-1 ap-northeast-2 ap-southeast-1 ap-southeast-2 ap-northeast-1 ca-central-1 eu-central-1 eu-west-1 eu-west-2 eu-west-3 sa-east-1"
-HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler postgresql-handler publisher rds-mysql-kfh-transform rds-postgresql-kfh-transform"
+HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler postgresql-handler publisher rds-mysql-kfh-transform rds-postgresql-kfh-transform sns-kfh-transform"
 
 # if DRYRUN is set to anything, turn it into the awscli switch
 [[ -n "${DRYRUN}" ]] && DRYRUN="--dryrun"
