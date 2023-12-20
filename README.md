@@ -32,6 +32,7 @@ These functions act as stream processors, structuring Kinesis log records, which
 Parsers exist for the following services:
 - MySQL RDS slow query log
 - PostgreSQL RDS logs
+- SNS events
 
 To get started, include the [rds-logs Terraform module](https://registry.terraform.io/modules/honeycombio/integrations/aws/latest/submodules/rds-logs) or launch the [rds-logs CloudFormation stack](https://github.com/honeycombio/cloudformation-integrations/blob/main/README.md#rds-cloudwatch-logs).
 ## Advanced Configuration

@@ -1,5 +1,14 @@
 # agentless-integrations-for-aws Changelog
 
+## 4.1.0 2023-12-20
+
+### Enhancements
+- Add SNS KFH transform (#227)
+
+### Maintenance
+- Bump github.com/aws/aws-sdk-go from 1.45.19 to 1.47.0 (#223)
+- Bump github.com/aws/aws-sdk-go from 1.47.0 to 1.48.10 (#226)
+
 ## 4.0.0 2023-10-13
 
 Upgrade from go1.x runtime to provided.al2 runtime ahead of the December 31st go1.x deprecation. 
