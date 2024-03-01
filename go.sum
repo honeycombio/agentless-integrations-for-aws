@@ -24,8 +24,8 @@ github.com/go-sql-driver/mysql v1.7.0 h1:ueSltNNllEqE3qcWBTD0iQd3IpL/6U+mJxLkazJ
 github.com/go-sql-driver/mysql v1.7.0/go.mod h1:OXbVy3sEdcQ2Doequ6Z5BW6fXNQTmx+9S1MCJN5yJMI=
 github.com/honeycombio/honeytail v1.8.3 h1:AHbv0Mfo0vgYJebWxbR/swomtQiOMUedtNpe38iWo/o=
 github.com/honeycombio/honeytail v1.8.3/go.mod h1:hyIFljvOiWhJwbHvKubHnXMo5b8usllc69LzzoDkST4=
-github.com/honeycombio/libhoney-go v1.20.0 h1:PL54R0P9vxIyb28H3twbLb+DCqQlJdMQM55VZg1abKA=
-github.com/honeycombio/libhoney-go v1.20.0/go.mod h1:RIaurCpfg5NDWSEV8t3QLcda9dUAiVNyWeHRAaSpN90=
+github.com/honeycombio/libhoney-go v1.21.0 h1:uiiSfUipFSrmBucKTrwD9Bm4K60kY98p0hVLjtSLseM=
+github.com/honeycombio/libhoney-go v1.21.0/go.mod h1:RIaurCpfg5NDWSEV8t3QLcda9dUAiVNyWeHRAaSpN90=
 github.com/honeycombio/mysqltools v0.0.1 h1:VyC2Z3npDpgXuwlBXwNcE/IH72STTZ1Tjt3pZlLPsDM=
 github.com/honeycombio/mysqltools v0.0.1/go.mod h1:r/WQhfDgxowZatJvhdy2VL801FOv5u8K6NzYqCGBJkQ=
 github.com/honeycombio/sqlparser v0.0.0-20180730202938-aab361df519b h1:SnUWJT5YfoZglKQu19Q9LaskN90+Hks9QB2+4FtrUeY=
