@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/aws/aws-lambda-go v1.46.0
-	github.com/aws/aws-sdk-go v1.50.8
+	github.com/aws/aws-sdk-go v1.50.29
 	github.com/honeycombio/honeytail v1.8.3
 	github.com/honeycombio/libhoney-go v1.20.0
 	github.com/sirupsen/logrus v1.9.3
