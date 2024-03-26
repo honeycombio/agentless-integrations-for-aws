@@ -1,5 +1,20 @@
 # agentless-integrations-for-aws Changelog
 
+## 4.2.0 2024-03-26
+
+### Fixed
+- fix(vpc-flow-log): correct regex pattern (#236)
+- fix(vpc flow log): remove quotes in regex (#237)
+
+
+### Maintenance
+- maint(deps): bump github.com/aws/aws-sdk-go from 1.48.10 to 1.49.13 (#229)
+- maint(deps): bump github.com/aws/aws-lambda-go from 1.41.0 to 1.43.0 (#230)
+- maint(deps): bump github.com/aws/aws-sdk-go from 1.49.13 to 1.50.8 (#231)
+- maint(deps): bump github.com/aws/aws-lambda-go from 1.43.0 to 1.46.0 (#232)
+- maint(deps): bump github.com/aws/aws-sdk-go from 1.50.8 to 1.50.29 (#234)
+- maint(deps): bump github.com/honeycombio/libhoney-go from 1.20.0 to 1.21.0 (#235)
+
 ## 4.1.0 2023-12-20
 
 ### Enhancements
