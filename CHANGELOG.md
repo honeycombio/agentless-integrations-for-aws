@@ -8,15 +8,6 @@
 - maint(deps): bump github.com/honeycombio/libhoney-go from 1.21.0 to 1.22.0 (#240)
 - maint: add classification and classification reason to ALB regex (#243)
 
-## 4.1.0 2023-12-20
-
-### Enhancements
-- Add SNS KFH transform (#227)
-
-### Maintenance
-- Bump github.com/aws/aws-sdk-go from 1.45.19 to 1.47.0 (#223)
-- Bump github.com/aws/aws-sdk-go from 1.47.0 to 1.48.10 (#226)
-- 
 ## 4.2.0 2024-03-26
 
 ### Fixed
