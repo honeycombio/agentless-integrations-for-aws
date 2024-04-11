@@ -1,5 +1,13 @@
 # agentless-integrations-for-aws Changelog
 
+## 4.3.0 2024-04-11
+
+### Maintenance
+- maint(deps): bump github.com/aws/aws-sdk-go from 1.50.29 to 1.51.11 (#242)
+- maint(deps): bump github.com/stretchr/testify from 1.8.4 to 1.9.0 (#241)
+- maint(deps): bump github.com/honeycombio/libhoney-go from 1.21.0 to 1.22.0 (#240)
+- maint: add classification and classification reason to ALB regex (#243)
+
 ## 4.2.0 2024-03-26
 
 ### Fixed
