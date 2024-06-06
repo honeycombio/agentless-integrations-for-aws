@@ -22,3 +22,24 @@ func (suite *RequestRedactSuite) TestRedact() {
 func TestRequestRedaction(t *testing.T) {
 	suite.Run(t, new(RequestRedactSuite))
 }
+
+type RequestUrlParseSuite struct {
+	suite.Suite
+}
+
+func (suite *RequestUrlParseSuite) TestParseUrl() {
+	sampleRequest := "GET https://sample.host.tld:443/v1/products/foobar/events?param1=xxxx234 HTTP/2.0"
+	httpMeta, err := parseRequestHttpMeta(sampleRequest)
+	suite.Nil(err)
+	suite.Equal("GET", httpMeta["http.request.method"])
+	suite.Equal("https", httpMeta["url.scheme"])
+	suite.Equal("sample.host.tld", httpMeta["server.address"])
+	suite.Equal("443", httpMeta["server.port"])
+	suite.Equal("/v1/products/foobar/events", httpMeta["url.path"])
+	suite.Equal("param1=xxxx234", httpMeta["url.query"])
+	suite.Equal("2.0", httpMeta["network.protocol.version"])
+}
+
+func TestRequestUrlParsing(t *testing.T) {
+	suite.Run(t, new(RequestUrlParseSuite))
+}
