@@ -111,18 +111,20 @@ func Handler(request events.S3Event) (Response, error) {
 				parseXRayTraceID(tmp.(string), parsedLine)
 			}
 
-			if req, ok := parsedLine["request"].(string); redactPattern != nil && ok {
-				parsedLine["request"] = redactRequest(req, redactPattern)
-			}
+			if req, ok := parsedLine["request"].(string); ok {
+				if redactPattern != nil {
+					parsedLine["request"] = redactRequest(req, redactPattern)
+				}
 
-			if req, ok := parsedLine["request"].(string); ok && parserType == "alb" {
-				httpMeta, err := parseRequestHttpMeta(req)
-				if err != nil {
-					logrus.WithError(err).WithField("request", req).
-						Error("failed to parse request metadata")
-				} else {
-					for k, v := range httpMeta {
-						parsedLine[k] = v
+				if parserType == "alb" {
+					httpMeta, err := parseRequestHttpMeta(req)
+					if err != nil {
+						logrus.WithError(err).WithField("request", req).
+							Error("failed to parse request metadata")
+					} else {
+						for k, v := range httpMeta {
+							parsedLine[k] = v
+						}
 					}
 				}
 			}
