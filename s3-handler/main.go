@@ -266,8 +266,7 @@ func main() {
 		filterPatterns = strings.Split(os.Getenv("FILTER_PATTERNS"), ",")
 	}
 
-	if os.Getenv("REDACT_PATTERN") != "" {
-		redactPatternString := os.Getenv("REDACT_PATTERN")
+	if redactPatternString = os.Getenv("REDACT_PATTERN"); redactPatternString != "" {
 		redactPattern, err = regexp.Compile(redactPatternString)
 		if err != nil {
 			logrus.WithError(err).WithField("redact_pattern", redactPatternString).
