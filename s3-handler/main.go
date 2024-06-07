@@ -4,6 +4,13 @@ import (
 	"bufio"
 	"compress/gzip"
 	"encoding/json"
+	"io"
+	"math/rand"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,11 +21,6 @@ import (
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
-	"io"
-	"math/rand"
-	"os"
-	"strconv"
-	"strings"
 )
 
 // Response is a simple structured response
@@ -30,6 +32,7 @@ type Response struct {
 var parser parsers.LineParser
 var parserType, timeFieldName, timeFieldFormat, env string
 var matchPatterns, filterPatterns []string
+var redactPattern *regexp.Regexp
 var bufferSize uint
 var forceGunzip bool
 var renameFields = map[string]string{}
@@ -106,6 +109,24 @@ func Handler(request events.S3Event) (Response, error) {
 			// handle XRay formatted trace id
 			if tmp, ok := parsedLine["trace_id"]; ok {
 				parseXRayTraceID(tmp.(string), parsedLine)
+			}
+
+			if req, ok := parsedLine["request"].(string); ok {
+				if redactPattern != nil {
+					parsedLine["request"] = redactRequest(req, redactPattern)
+				}
+
+				if parserType == "alb" {
+					httpMeta, err := parseRequestHttpMeta(req)
+					if err != nil {
+						logrus.WithError(err).WithField("request", req).
+							Error("failed to parse request metadata")
+					} else {
+						for k, v := range httpMeta {
+							parsedLine[k] = v
+						}
+					}
+				}
 			}
 
 			for k, v := range renameFields {
@@ -244,6 +265,15 @@ func main() {
 	if os.Getenv("FILTER_PATTERNS") != "" {
 		filterPatterns = strings.Split(os.Getenv("FILTER_PATTERNS"), ",")
 	}
+
+	if redactPatternString = os.Getenv("REDACT_PATTERN"); redactPatternString != "" {
+		redactPattern, err = regexp.Compile(redactPatternString)
+		if err != nil {
+			logrus.WithError(err).WithField("redact_pattern", redactPatternString).
+				Error("unable to compile redact pattern")
+		}
+	}
+
 	if os.Getenv("BUFFER_SIZE") != "" {
 		size, err := strconv.Atoi(os.Getenv("BUFFER_SIZE"))
 		if err != nil {
