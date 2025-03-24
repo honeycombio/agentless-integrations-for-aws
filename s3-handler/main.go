@@ -4,6 +4,12 @@ import (
 	"bufio"
 	"compress/gzip"
 	"encoding/json"
+	"io"
+	"math/rand"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,11 +20,6 @@ import (
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
-	"io"
-	"math/rand"
-	"os"
-	"strconv"
-	"strings"
 )
 
 // Response is a simple structured response
@@ -34,12 +35,19 @@ var bufferSize uint
 var forceGunzip bool
 var renameFields = map[string]string{}
 
+type lineFilterRule struct {
+	Prefix             string   `json:"Prefix"`
+	MatchLinePatterns  []string `json:"MatchLinePatterns"`
+	FilterLinePatterns []string `json:"FilterLinePatterns"`
+}
+
 type sampleRateRule struct {
 	Prefix     string `json:"Prefix"`
 	SampleRate uint   `json:"SampleRate"`
 }
 
 var sampleRateRules []sampleRateRule
+var lineFilterRules []lineFilterRule
 
 func Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -64,7 +72,7 @@ func Handler(request events.S3Event) (Response, error) {
 			continue
 		}
 
-		linesRead := 0
+		linesRead, linesKept := 0, 0
 		scanner := bufio.NewScanner(reader)
 		buffer := make([]byte, bufferSize)
 		scanner.Buffer(buffer, int(bufferSize))
@@ -74,6 +82,7 @@ func Handler(request events.S3Event) (Response, error) {
 			if linesRead%10000 == 0 {
 				logrus.WithFields(logrus.Fields{
 					"lines_read": linesRead,
+					"lines_kept": linesKept,
 					"key":        record.S3.Object.Key,
 				}).Info("parser checkpoint")
 			}
@@ -93,7 +102,27 @@ func Handler(request events.S3Event) (Response, error) {
 				continue
 			}
 
-			parsedLine, err := parser.ParseLine(scanner.Text())
+			// Not sure how sample rates and line patterns should be handled
+			line := scanner.Text()
+			for _, rule := range lineFilterRules {
+				if rule.Prefix != "" && strings.HasPrefix(record.S3.Object.Key, rule.Prefix) {
+					if filterKey(line, rule.MatchLinePatterns, rule.FilterLinePatterns) {
+						logrus.WithFields(logrus.Fields{
+							"line": scanner.Text(),
+							"rule": rule,
+						}).Debug("matched fule, not patterns, skipping")
+						line = "" // empty the line so it continues the outer loop
+					}
+					break // exit the inner loop because it matched the rule.
+				}
+			}
+			if line == "" { // skip the rest of the outter loop
+				continue
+			}
+			// decided to keep the line
+			linesKept++
+
+			parsedLine, err := parser.ParseLine(line)
 			if err != nil || len(parsedLine) == 0 {
 				logrus.WithError(err).WithField("line", scanner.Text()).
 					Warn("failed to parse line")
