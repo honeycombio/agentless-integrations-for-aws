@@ -41,6 +41,27 @@ type lineFilterRule struct {
 	FilterLinePatterns []string `json:"FilterLinePatterns"`
 }
 
+func (r lineFilterRule) NotEmpty() bool {
+	if r.Prefix != "" {
+		return false
+	}
+	if len(r.MatchLinePatterns) > 0 && len(r.FilterLinePatterns) > 0 {
+		return false
+	}
+	foundPatterns := false
+	for _, pattern := range r.MatchLinePatterns {
+		if pattern != "" {
+			foundPatterns = true
+		}
+	}
+	for _, pattern := range r.FilterLinePatterns {
+		if pattern != "" {
+			foundPatterns = true
+		}
+	}
+	return foundPatterns
+}
+
 type sampleRateRule struct {
 	Prefix     string `json:"Prefix"`
 	SampleRate uint   `json:"SampleRate"`
@@ -57,6 +78,8 @@ func Handler(request events.S3Event) (Response, error) {
 	config := &aws.Config{}
 	svc := s3.New(sess, config)
 
+	linesRead, linesKept := 0, 0
+
 	for _, record := range request.Records {
 		if filterKey(record.S3.Object.Key, matchPatterns, filterPatterns) {
 			logrus.WithFields(logrus.Fields{
@@ -72,7 +95,6 @@ func Handler(request events.S3Event) (Response, error) {
 			continue
 		}
 
-		linesRead, linesKept := 0, 0
 		scanner := bufio.NewScanner(reader)
 		buffer := make([]byte, bufferSize)
 		scanner.Buffer(buffer, int(bufferSize))
@@ -106,11 +128,7 @@ func Handler(request events.S3Event) (Response, error) {
 			line := scanner.Text()
 			for _, rule := range lineFilterRules {
 				if rule.Prefix != "" && strings.HasPrefix(record.S3.Object.Key, rule.Prefix) {
-					if filterKey(line, rule.MatchLinePatterns, rule.FilterLinePatterns) {
-						logrus.WithFields(logrus.Fields{
-							"line": scanner.Text(),
-							"rule": rule,
-						}).Debug("matched fule, not patterns, skipping")
+					if filterKey(line, rule.MatchLinePatterns, rule.FilterLinePatterns) { // should be false if not filtered
 						line = "" // empty the line so it continues the outer loop
 					}
 					break // exit the inner loop because it matched the rule.
@@ -173,6 +191,11 @@ func Handler(request events.S3Event) (Response, error) {
 				Error("s3 read of object ended early due to error")
 		}
 	}
+	logrus.WithFields(logrus.Fields{
+		"lines_read":   linesRead,
+		"lines_kept":   linesKept,
+		"record_count": len(request.Records),
+	}).Info("parser completed")
 
 	libhoney.Flush()
 
@@ -211,6 +234,44 @@ func initSamplingRules() error {
 	return err
 }
 
+func parseLineFilterRules(input []byte) ([]lineFilterRule, error) {
+	var result []lineFilterRule
+	err := json.Unmarshal(input, &result)
+	return result, err
+}
+
+func initLineFilterRules() error {
+	rulesRaw := os.Getenv("LINE_FILTER_RULES")
+
+	if rulesRaw == "" {
+		return nil
+	}
+	logrus.WithField("LINE_FILTER_RULES", rulesRaw).Info("Got line filter rules")
+
+	var err error
+	lineFilterRules, err = parseLineFilterRules([]byte(rulesRaw))
+	if len(lineFilterRules) < 1 {
+		logrus.Error("Rules are empty, probably invalid JSON")
+		return nil
+	}
+
+	// remove any empty rules
+	for i := range lineFilterRules {
+		if !lineFilterRules[i].NotEmpty() {
+			lineFilterRules = append(lineFilterRules[:i], lineFilterRules[i+1:]...)
+		}
+	}
+
+	for i := range lineFilterRules {
+		// ensure there's a match pattern in a rule that has none.
+		if lineFilterRules[i].MatchLinePatterns == nil || len(lineFilterRules[i].MatchLinePatterns) < 1 {
+			lineFilterRules[i].MatchLinePatterns = []string{".*"}
+		}
+	}
+
+	return err
+}
+
 func main() {
 	var err error
 	if err = common.InitHoneycombFromEnvVars(); err != nil {
@@ -222,6 +283,12 @@ func main() {
 	if err = initSamplingRules(); err != nil {
 		logrus.WithError(err).
 			Fatalf("unable to parse sampling rate rules: %v", err)
+		return
+	}
+
+	if err = initLineFilterRules(); err != nil {
+		logrus.WithError(err).
+			Fatalf("unable to parse line filter rules: %v", err)
 		return
 	}
 
