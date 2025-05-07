@@ -248,9 +248,11 @@ func initLineFilterRules() error {
 	}
 	logrus.WithField("LINE_FILTER_RULES", rulesRaw).Info("Got line filter rules")
 
-	var err error
-	lineFilterRules, err = parseLineFilterRules([]byte(rulesRaw))
-	if len(lineFilterRules) < 1 {
+	lineFilterRules, err := parseLineFilterRules([]byte(rulesRaw))
+	if err != nil {
+		return err
+	}
+	if len(lineFilterRules) == 0 {
 		logrus.Error("Rules are empty, probably invalid JSON")
 		return nil
 	}
