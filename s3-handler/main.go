@@ -266,7 +266,7 @@ func initLineFilterRules() error {
 
 	for i := range lineFilterRules {
 		// ensure there's a match pattern in a rule that has none.
-		if lineFilterRules[i].MatchLinePatterns == nil || len(lineFilterRules[i].MatchLinePatterns) < 1 {
+		if lineFilterRules[i].MatchLinePatterns == nil || len(lineFilterRules[i].MatchLinePatterns) == 0 {
 			lineFilterRules[i].MatchLinePatterns = []string{".*"}
 		}
 	}
