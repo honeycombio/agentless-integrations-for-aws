@@ -4,6 +4,12 @@ import (
 	"bufio"
 	"compress/gzip"
 	"encoding/json"
+	"io"
+	"math/rand"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,11 +20,6 @@ import (
 	"github.com/honeycombio/honeytail/parsers"
 	"github.com/honeycombio/libhoney-go"
 	"github.com/sirupsen/logrus"
-	"io"
-	"math/rand"
-	"os"
-	"strconv"
-	"strings"
 )
 
 // Response is a simple structured response
@@ -34,12 +35,40 @@ var bufferSize uint
 var forceGunzip bool
 var renameFields = map[string]string{}
 
+type lineFilterRule struct {
+	Prefix             string   `json:"Prefix"`
+	MatchLinePatterns  []string `json:"MatchLinePatterns"`
+	FilterLinePatterns []string `json:"FilterLinePatterns"`
+}
+
+func (r lineFilterRule) NotEmpty() bool {
+	if r.Prefix != "" {
+		return false
+	}
+	if len(r.MatchLinePatterns) > 0 && len(r.FilterLinePatterns) > 0 {
+		return false
+	}
+	foundPatterns := false
+	for _, pattern := range r.MatchLinePatterns {
+		if pattern != "" {
+			foundPatterns = true
+		}
+	}
+	for _, pattern := range r.FilterLinePatterns {
+		if pattern != "" {
+			foundPatterns = true
+		}
+	}
+	return foundPatterns
+}
+
 type sampleRateRule struct {
 	Prefix     string `json:"Prefix"`
 	SampleRate uint   `json:"SampleRate"`
 }
 
 var sampleRateRules []sampleRateRule
+var lineFilterRules []lineFilterRule
 
 func Handler(request events.S3Event) (Response, error) {
 	sess := session.Must(session.NewSession(&aws.Config{
@@ -48,6 +77,8 @@ func Handler(request events.S3Event) (Response, error) {
 
 	config := &aws.Config{}
 	svc := s3.New(sess, config)
+
+	linesRead, linesKept := 0, 0
 
 	for _, record := range request.Records {
 		if filterKey(record.S3.Object.Key, matchPatterns, filterPatterns) {
@@ -64,7 +95,6 @@ func Handler(request events.S3Event) (Response, error) {
 			continue
 		}
 
-		linesRead := 0
 		scanner := bufio.NewScanner(reader)
 		buffer := make([]byte, bufferSize)
 		scanner.Buffer(buffer, int(bufferSize))
@@ -74,6 +104,7 @@ func Handler(request events.S3Event) (Response, error) {
 			if linesRead%10000 == 0 {
 				logrus.WithFields(logrus.Fields{
 					"lines_read": linesRead,
+					"lines_kept": linesKept,
 					"key":        record.S3.Object.Key,
 				}).Info("parser checkpoint")
 			}
@@ -93,7 +124,23 @@ func Handler(request events.S3Event) (Response, error) {
 				continue
 			}
 
-			parsedLine, err := parser.ParseLine(scanner.Text())
+			// Not sure how sample rates and line patterns should be handled
+			line := scanner.Text()
+			for _, rule := range lineFilterRules {
+				if rule.Prefix != "" && strings.HasPrefix(record.S3.Object.Key, rule.Prefix) {
+					if filterKey(line, rule.MatchLinePatterns, rule.FilterLinePatterns) { // should be false if not filtered
+						line = "" // empty the line so it continues the outer loop
+					}
+					break // exit the inner loop because it matched the rule.
+				}
+			}
+			if line == "" { // skip the rest of the outter loop
+				continue
+			}
+			// decided to keep the line
+			linesKept++
+
+			parsedLine, err := parser.ParseLine(line)
 			if err != nil || len(parsedLine) == 0 {
 				logrus.WithError(err).WithField("line", scanner.Text()).
 					Warn("failed to parse line")
@@ -144,6 +191,11 @@ func Handler(request events.S3Event) (Response, error) {
 				Error("s3 read of object ended early due to error")
 		}
 	}
+	logrus.WithFields(logrus.Fields{
+		"lines_read":   linesRead,
+		"lines_kept":   linesKept,
+		"record_count": len(request.Records),
+	}).Info("parser completed")
 
 	libhoney.Flush()
 
@@ -182,6 +234,46 @@ func initSamplingRules() error {
 	return err
 }
 
+func parseLineFilterRules(input []byte) ([]lineFilterRule, error) {
+	var result []lineFilterRule
+	err := json.Unmarshal(input, &result)
+	return result, err
+}
+
+func initLineFilterRules() error {
+	rulesRaw := os.Getenv("LINE_FILTER_RULES")
+
+	if rulesRaw == "" {
+		return nil
+	}
+	logrus.WithField("LINE_FILTER_RULES", rulesRaw).Info("Got line filter rules")
+
+	lineFilterRules, err := parseLineFilterRules([]byte(rulesRaw))
+	if err != nil {
+		return err
+	}
+	if len(lineFilterRules) == 0 {
+		logrus.Error("Rules are empty, probably invalid JSON")
+		return nil
+	}
+
+	// remove any empty rules
+	for i := range lineFilterRules {
+		if !lineFilterRules[i].NotEmpty() {
+			lineFilterRules = append(lineFilterRules[:i], lineFilterRules[i+1:]...)
+		}
+	}
+
+	for i := range lineFilterRules {
+		// ensure there's a match pattern in a rule that has none.
+		if lineFilterRules[i].MatchLinePatterns == nil || len(lineFilterRules[i].MatchLinePatterns) == 0 {
+			lineFilterRules[i].MatchLinePatterns = []string{".*"}
+		}
+	}
+
+	return err
+}
+
 func main() {
 	var err error
 	if err = common.InitHoneycombFromEnvVars(); err != nil {
@@ -193,6 +285,12 @@ func main() {
 	if err = initSamplingRules(); err != nil {
 		logrus.WithError(err).
 			Fatalf("unable to parse sampling rate rules: %v", err)
+		return
+	}
+
+	if err = initLineFilterRules(); err != nil {
+		logrus.WithError(err).
+			Fatalf("unable to parse line filter rules: %v", err)
 		return
 	}
 

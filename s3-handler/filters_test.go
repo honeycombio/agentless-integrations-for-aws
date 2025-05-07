@@ -55,6 +55,27 @@ func TestFilterKey(t *testing.T) {
 			key:            "some/random/key",
 			shouldFilter:   true,
 		},
+		// filter a line pattern
+		filterTestCase{
+			matchPatterns:  []string{"status=500"},
+			filterPatterns: []string{},
+			key:            "something log status=200 something else",
+			shouldFilter:   true,
+		},
+		// match a line pattern
+		filterTestCase{
+			matchPatterns:  []string{"status=500"},
+			filterPatterns: []string{},
+			key:            "something log status=500 something else",
+			shouldFilter:   false,
+		},
+		// filter a line pattern
+		filterTestCase{
+			matchPatterns:  []string{".+"},
+			filterPatterns: []string{"status=200"},
+			key:            "something log status=200 something else",
+			shouldFilter:   true,
+		},
 	}
 
 	for _, c := range testCases {
