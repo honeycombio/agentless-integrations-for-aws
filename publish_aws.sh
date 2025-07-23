@@ -8,60 +8,23 @@ set -e
 # gd591456 - this commit's id
 GIT_VERSION="`git describe | sed -e s/^v//`"
 VERSION="${CIRCLE_TAG:-$GIT_VERSION}"
-# AWS Regions - Updated from: https://aws.amazon.com/about-aws/global-infrastructure/regions_az/
-# Last updated: July 2025
-REGIONS=(
-  # US Regions
-  "us-east-1"      # N. Virginia
-  "us-east-2"      # Ohio
-  "us-west-1"      # N. California
-  "us-west-2"      # Oregon
+# Read AWS regions from file maintained by update_aws_regions_list.sh
+REGIONS_FILE="aws_regions_list.txt"
 
-  # Canada Regions
-  "ca-central-1"   # Central
-  "ca-west-1"      # Calgary
+if [[ ! -f "${REGIONS_FILE}" ]]; then
+  echo "ERROR: ${REGIONS_FILE} not found. Run ./update_aws_regions_list.sh to generate it."
+  exit 1
+fi
 
-  # Mexico Regions
-  "mx-central-1"   # Central
+echo "+++ Reading AWS regions from ${REGIONS_FILE}"
+REGIONS=()
+while IFS= read -r region; do
+  # Skip empty lines and comments
+  [[ -z "$region" || "$region" == \#* ]] && continue
+  REGIONS+=("$region")
+done < "${REGIONS_FILE}"
 
-  # South America Regions
-  "sa-east-1"      # São Paulo
-
-  # Europe Regions
-  "eu-central-1"   # Frankfurt
-  "eu-central-2"   # Zurich
-  "eu-west-1"      # Ireland
-  "eu-west-2"      # London
-  "eu-west-3"      # Paris
-  "eu-north-1"     # Stockholm
-  "eu-south-1"     # Milan
-  "eu-south-2"     # Spain
-
-  # Asia Pacific Regions
-  "ap-northeast-1" # Tokyo
-  "ap-northeast-2" # Seoul
-  "ap-northeast-3" # Osaka
-  "ap-south-1"     # Mumbai
-  "ap-south-2"     # Hyderabad
-  "ap-southeast-1" # Singapore
-  "ap-southeast-2" # Sydney
-  "ap-southeast-3" # Jakarta
-  "ap-southeast-4" # Melbourne
-  "ap-southeast-5" # Malaysia
-  "ap-southeast-7" # Thailand
-  "ap-east-1"      # Hong Kong
-  "ap-east-2"      # Taipei
-
-  # Middle East Regions
-  "me-south-1"     # Bahrain
-  "me-central-1"   # UAE
-
-  # Israel Region
-  "il-central-1"   # Tel Aviv
-
-  # Africa Region
-  "af-south-1"     # Cape Town
-)
+echo "+++ Will deploy to ${#REGIONS[@]} regions: ${REGIONS[*]}"
 HANDLERS=(
   "cloudwatch-handler"
   "s3-handler"
@@ -86,13 +49,17 @@ else
   exit 1
 fi
 
-echo "+++ Uploading handlers"
+echo "+++ Uploading handlers to ${#REGIONS[@]} regions"
 for HANDLER in "${HANDLERS[@]}"; do
   for REGION in "${REGIONS[@]}"; do
     DEPLOY_ROOT=s3://honeycomb-integrations-${REGION}/agentless-integrations-for-aws
+    echo "Deploying ${HANDLER} to ${REGION}..."
+
     aws s3 cp ${DRYRUN} ${ZIP_PATH}/${HANDLER}-amd64.zip ${DEPLOY_ROOT}/${VERSION}/${HANDLER}-amd64.zip
     [[ -n "$CIRCLE_TAG" ]] && aws s3 cp ${DRYRUN} ${ZIP_PATH}/${HANDLER}-amd64.zip ${DEPLOY_ROOT}/LATEST/${HANDLER}-amd64.zip || true
     aws s3 cp ${DRYRUN} ${ZIP_PATH}/${HANDLER}-arm64.zip ${DEPLOY_ROOT}/${VERSION}/${HANDLER}-arm64.zip
     [[ -n "$CIRCLE_TAG" ]] && aws s3 cp ${DRYRUN} ${ZIP_PATH}/${HANDLER}-arm64.zip ${DEPLOY_ROOT}/LATEST/${HANDLER}-arm64.zip || true
   done
 done
+
+echo "+++ Successfully deployed all handlers to ${#REGIONS[@]} regions"

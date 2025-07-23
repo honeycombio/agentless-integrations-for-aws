@@ -71,6 +71,49 @@ by adding the following environment variable to the lambda function created by t
 
 Something not working? Other questions? Create a GitHub Issue, or join our Slack community, Pollinators ([invite link](https://join.slack.com/t/honeycombpollinators/shared_invite/zt-xqexg936-dckd0l29wdE3WLmUs8Qvpg) to get help.
 
+## Development
+
+### Updating AWS Regions
+
+This project deploys to multiple AWS regions. The list of regions is maintained in `aws_regions_list.txt`.
+
+To update the list of AWS regions:
+
+1. Ensure you have AWS credentials configured with appropriate permissions
+2. Run the update script:
+   ```bash
+   ./update_aws_regions_list.sh
+   ```
+3. The script will:
+   - Check which regions your AWS account has access to
+   - Verify which regions have the required S3 buckets
+   - Update `aws_regions_list.txt` with valid regions
+   - List any regions that need buckets created
+
+### Creating S3 Buckets for New Regions
+
+If you need to add support for a new AWS region, you'll need to create the S3 bucket first:
+
+```bash
+# Set the region you want to add
+REGION=<region-name>
+
+# Create the bucket (for regions other than us-east-1)
+aws s3api create-bucket \
+  --bucket honeycomb-integrations-${REGION} \
+  --region ${REGION} \
+  --create-bucket-configuration LocationConstraint=${REGION} \
+  --acl public-read
+
+# For us-east-1, use this command instead (no LocationConstraint)
+aws s3api create-bucket \
+  --bucket honeycomb-integrations-us-east-1 \
+  --region us-east-1 \
+  --acl public-read
+```
+
+After creating the bucket, run `./update_aws_regions_list.sh` again to include it in the deployment list.
+
 ## Contributing
 
 Features, bug fixes and other changes are gladly accepted.
