@@ -8,6 +8,8 @@ set -e
 # gd591456 - this commit's id
 GIT_VERSION="`git describe | sed -e s/^v//`"
 VERSION="${CIRCLE_TAG:-$GIT_VERSION}"
+# AWS Regions - Updated from: https://aws.amazon.com/about-aws/global-infrastructure/regions_az/
+# Last updated: July 2025
 REGIONS=(
   # US Regions
   "us-east-1"      # N. Virginia
@@ -18,6 +20,9 @@ REGIONS=(
   # Canada Regions
   "ca-central-1"   # Central
   "ca-west-1"      # Calgary
+
+  # Mexico Regions
+  "mx-central-1"   # Central
 
   # South America Regions
   "sa-east-1"      # São Paulo
@@ -43,6 +48,9 @@ REGIONS=(
   "ap-southeast-3" # Jakarta
   "ap-southeast-4" # Melbourne
   "ap-southeast-5" # Malaysia
+  "ap-southeast-7" # Thailand
+  "ap-east-1"      # Hong Kong
+  "ap-east-2"      # Taipei
 
   # Middle East Regions
   "me-south-1"     # Bahrain
