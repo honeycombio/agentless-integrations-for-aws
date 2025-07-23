@@ -102,13 +102,24 @@ REGION=<region-name>
 aws s3api create-bucket \
   --bucket honeycomb-integrations-${REGION} \
   --region ${REGION} \
-  --create-bucket-configuration LocationConstraint=${REGION} \
-  --acl public-read
+  --create-bucket-configuration LocationConstraint=${REGION}
 
-# For us-east-1, use this command instead (no LocationConstraint)
+# For us-east-1, omit the LocationConstraint
 aws s3api create-bucket \
   --bucket honeycomb-integrations-us-east-1 \
-  --region us-east-1 \
+  --region us-east-1
+
+# Then make the bucket public (for any region)
+aws s3api put-public-access-block \
+  --bucket honeycomb-integrations-${REGION} \
+  --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
+
+aws s3api put-bucket-ownership-controls \
+  --bucket honeycomb-integrations-${REGION} \
+  --ownership-controls="Rules=[{ObjectOwnership=BucketOwnerPreferred}]"
+
+aws s3api put-bucket-acl \
+  --bucket honeycomb-integrations-${REGION} \
   --acl public-read
 ```
 
