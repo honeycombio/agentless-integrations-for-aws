@@ -8,8 +8,34 @@ set -e
 # gd591456 - this commit's id
 GIT_VERSION="`git describe | sed -e s/^v//`"
 VERSION="${CIRCLE_TAG:-$GIT_VERSION}"
-REGIONS="us-east-1 us-east-2 us-west-1 us-west-2 ap-south-1 ap-northeast-2 ap-southeast-1 ap-southeast-2 ap-northeast-1 ca-central-1 eu-central-1 eu-west-1 eu-west-2 eu-west-3 sa-east-1"
-HANDLERS="cloudwatch-handler s3-handler sns-handler mysql-handler postgresql-handler publisher rds-mysql-kfh-transform rds-postgresql-kfh-transform sns-kfh-transform"
+# Read AWS regions from file maintained by update_aws_regions_list.sh
+REGIONS_FILE="aws_regions_list.txt"
+
+if [[ ! -f "${REGIONS_FILE}" ]]; then
+  echo "ERROR: ${REGIONS_FILE} not found. Run ./update_aws_regions_list.sh to generate it."
+  exit 1
+fi
+
+echo "+++ Reading AWS regions from ${REGIONS_FILE}"
+REGIONS=()
+while IFS= read -r region; do
+  # Skip empty lines and comments
+  [[ -z "$region" || "$region" == \#* ]] && continue
+  REGIONS+=("$region")
+done < "${REGIONS_FILE}"
+
+echo "+++ Will deploy to ${#REGIONS[@]} regions: ${REGIONS[*]}"
+HANDLERS=(
+  "cloudwatch-handler"
+  "s3-handler"
+  "sns-handler"
+  "mysql-handler"
+  "postgresql-handler"
+  "publisher"
+  "rds-mysql-kfh-transform"
+  "rds-postgresql-kfh-transform"
+  "sns-kfh-transform"
+)
 
 # if DRYRUN is set to anything, turn it into the awscli switch
 [[ -n "${DRYRUN}" ]] && DRYRUN="--dryrun"
@@ -23,13 +49,17 @@ else
   exit 1
 fi
 
-echo "+++ Uploading handlers"
-for HANDLER in ${HANDLERS}; do
-  for REGION in ${REGIONS}; do
+echo "+++ Uploading handlers to ${#REGIONS[@]} regions"
+for HANDLER in "${HANDLERS[@]}"; do
+  for REGION in "${REGIONS[@]}"; do
     DEPLOY_ROOT=s3://honeycomb-integrations-${REGION}/agentless-integrations-for-aws
+    echo "Deploying ${HANDLER} to ${REGION}..."
+
     aws s3 cp ${DRYRUN} ${ZIP_PATH}/${HANDLER}-amd64.zip ${DEPLOY_ROOT}/${VERSION}/${HANDLER}-amd64.zip
     [[ -n "$CIRCLE_TAG" ]] && aws s3 cp ${DRYRUN} ${ZIP_PATH}/${HANDLER}-amd64.zip ${DEPLOY_ROOT}/LATEST/${HANDLER}-amd64.zip || true
     aws s3 cp ${DRYRUN} ${ZIP_PATH}/${HANDLER}-arm64.zip ${DEPLOY_ROOT}/${VERSION}/${HANDLER}-arm64.zip
     [[ -n "$CIRCLE_TAG" ]] && aws s3 cp ${DRYRUN} ${ZIP_PATH}/${HANDLER}-arm64.zip ${DEPLOY_ROOT}/LATEST/${HANDLER}-arm64.zip || true
   done
 done
+
+echo "+++ Successfully deployed all handlers to ${#REGIONS[@]} regions"
