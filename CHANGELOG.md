@@ -1,6 +1,6 @@
 # agentless-integrations-for-aws Changelog
 
-## 4.4.0 2024-04-11
+## 4.4.0 2025-08-18
 
 ### Enhacement
 - feat: add Line Filter Rules to drop or keep based on regex (#260) | [@mterhar](https://github.com/mterhar)
