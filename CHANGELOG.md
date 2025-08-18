@@ -1,5 +1,20 @@
 # agentless-integrations-for-aws Changelog
 
+## 4.4.0 2024-04-11
+
+### Enhacement
+- feat: add Line Filter Rules to drop or keep based on regex (#260) | [@mterhar](https://github.com/mterhar)
+
+### Fixed
+- fix: upgrade CI runners from Go 1.18 to 1.22 (#255) | [@robbkidd](https://github.com/robbkidd)
+
+### Maintenance
+- maint: Update publish regions list and make it more maintainable (#262) | [@irvingpop](https://github.com/irvingpop)
+- maint(deps): bump the examples group across 1 directory with 5 updates (#261)
+- maint: bump ci go version (#264) | [@codeboten](https://github.com/codeboten)
+- maint(deps): bump the examples group across 1 directory with 4 updates (#254)
+- docs: update vulnerability reporting process (#253) | [@robbkidd](https://github.com/robbkidd)
+
 ## 4.3.0 2024-04-11
 
 ### Maintenance
