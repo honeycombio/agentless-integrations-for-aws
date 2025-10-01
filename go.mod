@@ -4,11 +4,11 @@ go 1.21
 
 require (
 	github.com/aws/aws-lambda-go v1.49.0
-	github.com/aws/aws-sdk-go v1.55.7
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/honeycombio/honeytail v1.10.0
-	github.com/honeycombio/libhoney-go v1.25.0
+	github.com/honeycombio/libhoney-go v1.26.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
