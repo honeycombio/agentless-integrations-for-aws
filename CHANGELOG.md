@@ -1,5 +1,13 @@
 # agentless-integrations-for-aws Changelog
 
+## 4.5.0 2026-10-20
+
+### Fixed
+- fix: build with Go 1.27.3 and refresh deps for the eMudhra CA mitigation (#273) | [@lizthegrey](https://github.com/lizthegrey)
+
+### Maintenance
+- maint(deps): bump filippo.io/edwards25519 from 1.1.0 to 1.1.1 (#270)
+
 ## 4.4.0 2025-08-18
 
 ### Enhacement
