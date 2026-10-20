@@ -7,8 +7,8 @@ module github.com/honeycombio/agentless-integrations-for-aws
 go 1.27.3
 
 require (
-	github.com/aws/aws-lambda-go v1.49.0
-	github.com/aws/aws-sdk-go v1.55.7
+	github.com/aws/aws-lambda-go v1.55.1
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/honeycombio/honeytail v1.12.0
 	github.com/honeycombio/libhoney-go v1.27.1
 	github.com/sirupsen/logrus v1.10.2
@@ -22,7 +22,7 @@ require (
 	github.com/facebookgo/muster v0.0.0-20150708232844-fd3d7953fd52 // indirect
 	github.com/go-sql-driver/mysql v1.10.1 // indirect
 	github.com/honeycombio/mysqltools v0.0.1 // indirect
-	github.com/honeycombio/sqlparser v0.0.0-20180730202938-aab361df519b // indirect
+	github.com/honeycombio/sqlparser v0.0.0-20260310183350-42694197bb29 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/kr/logfmt v0.0.0-20210122060352-19f9bcb100e6 // indirect
