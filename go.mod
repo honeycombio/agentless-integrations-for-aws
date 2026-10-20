@@ -2,6 +2,11 @@ module github.com/honeycombio/agentless-integrations-for-aws
 
 go 1.21
 
+// Go 1.27.3 is the first release with crypto/x509 mitigation for CVE-2026-111943
+// (compromised eMudhra intermediate CAs). Handlers built with an older toolchain
+// still trust chains containing those intermediates, so require the patched one.
+toolchain go1.27.3
+
 require (
 	github.com/aws/aws-lambda-go v1.49.0
 	github.com/aws/aws-sdk-go v1.55.7
